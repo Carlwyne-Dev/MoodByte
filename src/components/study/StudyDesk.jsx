@@ -335,14 +335,14 @@ export default function StudyDesk({ onClose }) {
                 </label>
               </div>
               
-              <div className="file-grid">
-                {files.length === 0 ? (
-                  <div className="empty-library">
-                    <FileText size={48} opacity={0.5} />
-                    <p>No files uploaded yet.</p>
-                  </div>
-                ) : (
-                  files.map(f => (
+              {files.length === 0 ? (
+                <div className="empty-library">
+                  <FileText size={48} opacity={0.5} />
+                  <p>No files uploaded yet.</p>
+                </div>
+              ) : (
+                <div className="file-grid">
+                  {files.map(f => (
                     <div key={f.id} className="file-card" onClick={() => openFile(f)}>
                       <FileText size={32} className="file-icon" />
                       <div className="file-details">
@@ -356,9 +356,9 @@ export default function StudyDesk({ onClose }) {
                         <Trash2 size={16} />
                       </button>
                     </div>
-                  ))
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="document-viewer">
@@ -761,9 +761,9 @@ export default function StudyDesk({ onClose }) {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          flex: 1;
-          min-height: 300px;
           width: 100%;
+          height: calc(100% - 80px);
+          min-height: 300px;
           color: #a8b2d1;
           gap: 1rem;
           text-align: center;
