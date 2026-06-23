@@ -63,6 +63,17 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
+  // Preload all background GIFs so theme switching is instant (no network delay)
+  useEffect(() => {
+    const prefixes = ['night', 'rain', 'chill', 'focus'];
+    prefixes.forEach(prefix => {
+      [1, 2, 3].forEach(n => {
+        const img = new Image();
+        img.src = `/bg/${prefix}${n}.gif`;
+      });
+    });
+  }, []);
+
   useEffect(() => {
     loadThemeBg(theme);
   }, []); // Run once on mount
