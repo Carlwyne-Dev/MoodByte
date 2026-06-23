@@ -7,6 +7,8 @@ import StickyNoteBoard from './components/notes/StickyNoteBoard';
 import Player from './components/music/Player';
 import LoadingScreen from './components/LoadingScreen';
 import WelcomeModal from './components/WelcomeModal';
+import AchievementManager from './components/stats/AchievementManager';
+import StreakCounter from './components/stats/StreakCounter';
 import { useLocalStorage } from './hooks/useLocalStorage';
 
 import { Moon, CloudRain, Wind, Zap, ChevronRight, ChevronLeft } from 'lucide-react';
@@ -62,6 +64,8 @@ function App() {
 
   return (
     <div className="app-container" style={{ '--sidebar-offset': sidebarHidden ? '40px' : '360px' }}>
+      <AchievementManager />
+      <StreakCounter />
       {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
       {!isLoading && !hasSeenAppWelcome && (
         <WelcomeModal 

@@ -1,14 +1,15 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { X, CheckSquare, Clock, Smile, Award, Activity, Star, Timer, Heart, Flame } from 'lucide-react';
+import { X, CheckSquare, Clock, Smile, Award, Activity, Star, Timer, Heart, Flame, Meh, CloudRain, CloudLightning } from 'lucide-react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { ACHIEVEMENTS } from './AchievementManager';
 
 const MOODS = [
-  { id: 'great', label: 'Great', emoji: '✨', color: '#10b981' },
-  { id: 'good', label: 'Good', emoji: '😊', color: '#3b82f6' },
-  { id: 'okay', label: 'Okay', emoji: '😐', color: '#f59e0b' },
-  { id: 'bad', label: 'Bad', emoji: '🌧️', color: '#ef4444' },
-  { id: 'awful', label: 'Awful', emoji: '🌩️', color: '#8b5cf6' }
+  { id: 'great', label: 'Great', Icon: Star, color: '#10b981' },
+  { id: 'good', label: 'Good', Icon: Smile, color: '#3b82f6' },
+  { id: 'okay', label: 'Okay', Icon: Meh, color: '#f59e0b' },
+  { id: 'bad', label: 'Bad', Icon: CloudRain, color: '#ef4444' },
+  { id: 'awful', label: 'Awful', Icon: CloudLightning, color: '#8b5cf6' }
 ];
 
 export default function StatsModal({ onClose }) {
@@ -16,6 +17,7 @@ export default function StatsModal({ onClose }) {
   const [tasks] = useLocalStorage('tasks', []);
   const [pomodoroStats] = useLocalStorage('pomodoroStats', { sessions: 0 });
   const [moodHistory] = useLocalStorage('moodHistory', []);
+  const [unlockedAchievements] = useLocalStorage('unlockedAchievements', []);
 
   // Compute stats
   const completedActiveTasks = tasks.filter(t => t.completed);
@@ -145,7 +147,7 @@ export default function StatsModal({ onClose }) {
                   const pct = maxMoodCount > 0 ? (count / maxMoodCount) * 100 : 0;
                   return (
                     <div key={m.id} className="mood-bar-row">
-                      <div className="mood-bar-label">{m.emoji} <span className="m-lbl">{m.label}</span></div>
+                      <div className="mood-bar-label"><m.Icon size={16} color={m.color} /> <span className="m-lbl">{m.label}</span></div>
                       <div className="mood-bar-track">
                         <div 
                           className="mood-bar-fill" 
@@ -170,34 +172,19 @@ export default function StatsModal({ onClose }) {
           <div className="chart-card badges-card" style={{ marginTop: '1.5rem' }}>
             <h3 className="chart-title">Unlockable Achievements</h3>
             <div className="badges-grid">
-              <div className={`badge ${totalCompletedTasks >= 1 ? 'unlocked' : 'locked'}`}>
-                <div className="badge-icon"><Star size={22} color="#facc15" /></div>
-                <div className="badge-info">
-                  <h4>First Step</h4>
-                  <p>Complete 1 task</p>
-                </div>
-              </div>
-              <div className={`badge ${totalFocusSessions >= 5 ? 'unlocked' : 'locked'}`}>
-                <div className="badge-icon"><Timer size={22} color="#38bdf8" /></div>
-                <div className="badge-info">
-                  <h4>Deep Focus</h4>
-                  <p>Finish 5 Pomodoros</p>
-                </div>
-              </div>
-              <div className={`badge ${totalMoodsLogged >= 7 ? 'unlocked' : 'locked'}`}>
-                <div className="badge-icon"><Heart size={22} color="#f43f5e" /></div>
-                <div className="badge-info">
-                  <h4>Self Aware</h4>
-                  <p>Log 7 moods</p>
-                </div>
-              </div>
-              <div className={`badge ${totalCompletedTasks >= 50 ? 'unlocked' : 'locked'}`}>
-                <div className="badge-icon"><Flame size={22} color="#f97316" /></div>
-                <div className="badge-info">
-                  <h4>Unstoppable</h4>
-                  <p>Complete 50 tasks</p>
-                </div>
-              </div>
+              {ACHIEVEMENTS.map(ach => {
+                const isUnlocked = unlockedAchievements.includes(ach.id);
+                const Icon = ach.icon;
+                return (
+                  <div key={ach.id} className={`badge ${isUnlocked ? 'unlocked' : 'locked'}`}>
+                    <div className="badge-icon"><Icon size={22} color={isUnlocked ? ach.color : '#a8b2d1'} /></div>
+                    <div className="badge-info">
+                      <h4>{ach.title}</h4>
+                      <p>{ach.desc}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 

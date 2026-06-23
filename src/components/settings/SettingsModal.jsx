@@ -2,6 +2,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, Settings as SettingsIcon, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { getImageBlob } from '../../hooks/useImageStorage';
 
 const THEMES = [
   { id: 'night', label: 'Night' },
@@ -11,7 +12,33 @@ const THEMES = [
 ];
 
 export default function SettingsModal({ onClose }) {
-  const { theme, customBgs, uploadCustomBgForTheme, clearCustomBgForTheme } = useTheme();
+  const { theme, customBgs, uploadCustomBgForTheme, removeCustomBg } = useTheme();
+  const [previewUrls, setPreviewUrls] = React.useState({});
+
+  React.useEffect(() => {
+    let active = true;
+    const newUrls = {};
+
+    const loadPreviews = async () => {
+      for (const t of THEMES) {
+        const list = customBgs[t.id] || [];
+        for (const bgId of list) {
+          const blob = await getImageBlob(bgId);
+          if (blob && active) {
+            newUrls[bgId] = URL.createObjectURL(blob);
+          }
+        }
+      }
+      if (active) setPreviewUrls(newUrls);
+    };
+
+    loadPreviews();
+
+    return () => {
+      active = false;
+      Object.values(newUrls).forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [customBgs]);
 
   const handleUploadBg = async (e, themeId) => {
     const file = e.target.files?.[0];
@@ -41,31 +68,51 @@ export default function SettingsModal({ onClose }) {
               Upload custom backgrounds up to 5MB. They will be saved and used whenever you switch to that theme!
             </p>
 
-            <div className="theme-bg-list">
+            <div className="theme-bg-grid">
               {THEMES.map(t => {
-                const hasCustomBg = !!customBgs[t.id];
+                const bgList = customBgs[t.id] || [];
+                const bgCount = bgList.length;
+                
                 return (
                   <div key={t.id} className="theme-bg-item">
-                    <span className="theme-name">{t.label} Theme</span>
-                    <div className="theme-bg-actions">
-                      {hasCustomBg && (
-                        <button 
-                          className="remove-bg-btn" 
-                          onClick={() => clearCustomBgForTheme(t.id)}
-                          title="Remove custom wallpaper"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
-                      <label className="upload-bg-btn">
-                        {hasCustomBg ? 'Change Wallpaper' : 'Upload Wallpaper'}
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          style={{ display: 'none' }} 
-                          onChange={(e) => handleUploadBg(e, t.id)} 
-                        />
-                      </label>
+                    <div className="theme-bg-info">
+                      <span className="theme-name">{t.label} Theme</span>
+                      <span className="theme-count">{bgCount}/3</span>
+                    </div>
+                    <div className="theme-slots">
+                      {[0, 1, 2].map(index => {
+                        const bgId = bgList[index];
+                        const previewUrl = bgId ? previewUrls[bgId] : null;
+                        
+                        return (
+                          <div key={index} className="theme-slot">
+                            {bgId && previewUrl ? (
+                              <>
+                                <img src={previewUrl} alt="Wallpaper" className="theme-slot-img" />
+                                <div className="theme-slot-overlay">
+                                  <button 
+                                    className="remove-slot-btn" 
+                                    onClick={() => removeCustomBg(t.id, bgId)}
+                                    title="Remove this wallpaper"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </>
+                            ) : (
+                              <label className="theme-slot-empty" title="Upload Wallpaper">
+                                <input 
+                                  type="file" 
+                                  accept="image/*" 
+                                  style={{ display: 'none' }} 
+                                  onChange={(e) => handleUploadBg(e, t.id)} 
+                                />
+                                <span className="plus-icon">+</span>
+                              </label>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -134,47 +181,89 @@ export default function SettingsModal({ onClose }) {
           margin: 0 0 20px 0; color: #94a3b8; font-size: 0.9rem; line-height: 1.4;
         }
 
-        .theme-bg-list {
-          display: flex; flex-direction: column; gap: 12px;
+        .theme-bg-grid {
+          display: grid; 
+          grid-template-columns: 1fr 1fr; 
+          gap: 16px;
         }
         .theme-bg-item {
+          display: flex; flex-direction: column;
+          background: rgba(0,0,0,0.2);
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.05);
+          overflow: hidden;
+        }
+        .theme-bg-info {
           display: flex; justify-content: space-between; align-items: center;
           padding: 12px 16px;
-          background: rgba(0,0,0,0.2);
-          border-radius: 8px;
-          border: 1px solid rgba(255,255,255,0.05);
+          background: rgba(255,255,255,0.02);
+          border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .theme-name {
-          color: #e2e8f0; font-weight: 500;
+          color: #e2e8f0; font-weight: 600; font-size: 0.95rem;
         }
-        .theme-bg-actions {
-          display: flex; align-items: center; gap: 8px;
+        .theme-count {
+          color: #94a3b8; font-size: 0.8rem; font-family: 'Outfit', sans-serif;
+          background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 12px;
         }
-        .upload-bg-btn {
-          background: var(--primary);
-          color: #fff;
-          padding: 8px 16px;
-          border-radius: 8px;
-          font-size: 0.85rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: transform 0.2s;
+        
+        .theme-slots {
+          display: flex;
+          padding: 12px;
+          gap: 8px;
+          justify-content: space-between;
         }
-        .upload-bg-btn:hover {
-          transform: translateY(-1px);
+        
+        .theme-slot {
+          flex: 1;
+          aspect-ratio: 16/10;
+          background: rgba(0,0,0,0.4);
+          border-radius: 6px;
+          overflow: hidden;
+          position: relative;
+          border: 1px dashed rgba(255,255,255,0.1);
         }
-        .remove-bg-btn {
-          background: rgba(239, 68, 68, 0.1);
-          color: #ef4444;
-          border: none;
-          padding: 8px;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: background 0.2s;
+        
+        .theme-slot-img {
+          width: 100%; height: 100%; object-fit: cover;
+        }
+        
+        .theme-slot-empty {
+          width: 100%; height: 100%;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; transition: all 0.2s;
+        }
+        .theme-slot-empty:hover {
+          background: rgba(139, 92, 246, 0.1);
+          border-color: rgba(139, 92, 246, 0.5);
+        }
+        .plus-icon {
+          color: #64748b; font-size: 1.5rem; font-weight: 300;
+        }
+        .theme-slot-empty:hover .plus-icon {
+          color: #8b5cf6;
+        }
+        
+        .theme-slot-overlay {
+          position: absolute;
+          inset: 0;
+          background: rgba(0,0,0,0.6);
+          display: flex; align-items: center; justify-content: center;
+          opacity: 0; transition: opacity 0.2s;
+        }
+        .theme-slot:hover .theme-slot-overlay {
+          opacity: 1;
+        }
+        
+        .remove-slot-btn {
+          background: rgba(239, 68, 68, 0.9);
+          color: #fff; border: none;
+          padding: 6px; border-radius: 6px;
+          cursor: pointer; transition: background 0.2s;
           display: flex; align-items: center; justify-content: center;
         }
-        .remove-bg-btn:hover {
-          background: rgba(239, 68, 68, 0.2);
+        .remove-slot-btn:hover {
+          background: #dc2626;
         }
 
         .fade-in { animation: fadeIn 0.2s ease-out forwards; }

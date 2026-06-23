@@ -29,6 +29,7 @@ export function useLocalStorage(key, initialValue) {
         
         if (typeof window !== 'undefined') {
           window.localStorage.setItem(key, JSON.stringify(valueToStore));
+          window.dispatchEvent(new CustomEvent('local-storage', { detail: { key, value: valueToStore } }));
         }
         
         return valueToStore;
@@ -40,8 +41,30 @@ export function useLocalStorage(key, initialValue) {
 
   useEffect(() => {
     setStoredValue(readValue());
+    
+    // Listen for custom event to sync state across same-window components
+    const handleStorageChange = (e) => {
+      if (e.detail && e.detail.key === key) {
+        setStoredValue(e.detail.value);
+      }
+    };
+    
+    // Listen for standard storage event (cross-tab)
+    const handleCrossTabChange = (e) => {
+      if (e.key === key) {
+        setStoredValue(readValue());
+      }
+    };
+
+    window.addEventListener('local-storage', handleStorageChange);
+    window.addEventListener('storage', handleCrossTabChange);
+    
+    return () => {
+      window.removeEventListener('local-storage', handleStorageChange);
+      window.removeEventListener('storage', handleCrossTabChange);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [key]);
 
   return [storedValue, setValue];
 }
