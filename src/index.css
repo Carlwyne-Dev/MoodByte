@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Kalam:wght@400;700&family=Press+Start+2P&family=Caveat:wght@400;700&family=Indie+Flower&family=Pacifico&family=Permanent+Marker&family=Dancing+Script:wght@400;700&family=Shadows+Into+Light&family=Architects+Daughter&family=Rock+Salt&family=Special+Elite&family=Courier+Prime:wght@400;700&family=DM+Mono:wght@400;500&family=Lobster&family=Abril+Fatface&display=swap');
+
+:root {
+  /* Ultra-Premium Night Theme */
+  --bg-color: #0b1120;
+  --text-color: #f8fafc;
+  --text-muted: #94a3b8;
+  
+  /* Next-Gen Glassmorphism */
+  --glass-bg: rgba(11, 17, 32, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.15);
+  --glass-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+  
+  /* Vibrant Neumorphic Accents */
+  --primary: #a855f7;
+  --primary-hover: #c084fc;
+  --primary-glow: 0 0 20px rgba(168, 85, 247, 0.5), 0 0 40px rgba(168, 85, 247, 0.2);
+  
+  --danger: #ef4444;
+  --danger-bg: rgba(239, 68, 68, 0.15);
+  
+  --card-radius: 28px;
+  --transition-speed: 0.4s;
+}
+
+[data-theme='productive'] {
+  --bg-color: #0a192f;
+  --glass-bg: rgba(10, 25, 47, 0.5);
+  --primary: #22c55e;
+  --primary-glow: 0 0 20px rgba(34, 197, 94, 0.5), 0 0 40px rgba(34, 197, 94, 0.2);
+}
+
+[data-theme='rainy'] {
+  --bg-color: #0f172a;
+  --glass-bg: rgba(15, 23, 42, 0.5);
+  --primary: #38bdf8;
+  --primary-glow: 0 0 20px rgba(56, 189, 248, 0.5);
+}
+
+[data-theme='chill'] {
+  --bg-color: #171717;
+  --glass-bg: rgba(23, 23, 23, 0.5);
+  --primary: #fb923c;
+  --primary-glow: 0 0 20px rgba(251, 146, 60, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 1s ease;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Base App Layout */
+#root {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+}
+
+/* Masterful Glassmorphism Utility */
+.glass-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-top: 1px solid var(--glass-highlight);
+  border-left: 1px solid var(--glass-highlight);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--card-radius);
+  position: relative;
+  z-index: 1;
+}
+
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.inner-glass {
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid var(--glass-border);
+  border-top: 1px solid var(--glass-highlight);
+  border-left: 1px solid var(--glass-highlight);
+  border-radius: var(--card-radius);
+  padding: 1.8rem;
+  transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.inner-glass:hover {
+  background: linear-gradient(135deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 100%);
+  border-color: var(--glass-highlight);
+  transform: translateY(-2px);
+}
+
+/* Typography Overhaul */
+h1, h2, h3, h4 {
+  color: var(--text-color);
+}
+
+.font-handwriting {
+  font-family: 'Kalam', cursive;
+}
+
+.font-pixel {
+  font-family: 'Press Start 2P', cursive;
+  letter-spacing: 1.5px;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+
+/* Buttons */
+button {
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: inherit;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { 
+  background: rgba(255, 255, 255, 0.1); 
+  border-radius: 10px; 
+  border: 2px solid transparent; 
+  background-clip: padding-box; 
+}
+::-webkit-scrollbar-thumb:hover { 
+  background: var(--primary); 
+  border: 2px solid transparent; 
+  background-clip: padding-box; 
+}
