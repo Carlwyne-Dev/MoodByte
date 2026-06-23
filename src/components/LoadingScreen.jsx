@@ -9,7 +9,6 @@ const BG_URLS = [
 
 export default function LoadingScreen({ onComplete }) {
   const [isFading, setIsFading] = useState(false);
-  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     let loaded = 0;
@@ -24,12 +23,11 @@ export default function LoadingScreen({ onComplete }) {
       }
     };
 
-    // Preload all background GIFs
+    // Preload all background GIFs silently in the background
     BG_URLS.forEach(url => {
       const img = new Image();
       img.onload = img.onerror = () => {
         loaded++;
-        setProgress(Math.round((loaded / total) * 100));
         if (loaded === total) {
           imagesDone = true;
           tryComplete();
@@ -58,7 +56,7 @@ export default function LoadingScreen({ onComplete }) {
           </div>
         </div>
         
-        <p className="loading-text">LOADING... {progress < 100 ? `${progress}%` : 'DONE'}</p>
+        <p className="loading-text">LOADING...</p>
       </div>
 
       <style>{`
