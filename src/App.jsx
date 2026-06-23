@@ -277,6 +277,20 @@ function App() {
           display: flex;
           flex-direction: column;
           gap: 1.5rem;
+          -webkit-mask-image: linear-gradient(
+            to bottom,
+            transparent 0px,
+            black 40px,
+            black calc(100% - 40px),
+            transparent 100%
+          );
+          mask-image: linear-gradient(
+            to bottom,
+            transparent 0px,
+            black 40px,
+            black calc(100% - 40px),
+            transparent 100%
+          );
         }
 
         /* Tool Sections */

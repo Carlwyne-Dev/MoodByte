@@ -75,7 +75,7 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
 - Toggle and configure each section of the UI.
 - Custom background manager per theme (up to 3 slots each).
 - Full preview of your custom backgrounds before saving.
-- Pet settings (enable/disable, choose type, set name).
+- Pet panel (enable/disable, choose animal type, set name) — accessible via the pet icon in the Study Desk.
 - Pomodoro duration configuration.
 
 ### Onboarding
@@ -126,7 +126,7 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
 ## How to Use the Study Pet
 
 1. Open the **Study Desk** from the main page.
-2. Click the settings icon on the upper right to open **Pet Settings**. Enable your pet, pick an animal, and give it a name.
+2. Click the **pet icon** on the upper right of the Study Desk to open the **Pet Panel**. Enable your pet, pick an animal, and give it a name.
 3. Run the **Pomodoro Timer** and finish a focus session. A loot drop will appear when it's done.
 4. Click the **Treat Stash** (gift icon), select a treat rarity, and click anywhere on the screen to toss it. Your pet will run over and eat it!
 

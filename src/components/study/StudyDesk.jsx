@@ -761,9 +761,12 @@ export default function StudyDesk({ onClose }) {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          height: 200px;
+          flex: 1;
+          min-height: 300px;
+          width: 100%;
           color: #a8b2d1;
           gap: 1rem;
+          text-align: center;
         }
 
         .file-grid {

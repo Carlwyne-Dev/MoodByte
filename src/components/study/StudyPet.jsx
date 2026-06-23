@@ -83,7 +83,7 @@ const DIALOGUE = {
 
 export default function StudyPet({ showSettings, onCloseSettings }) {
   const [petSettings, setPetSettings] = useLocalStorage('studyPetSettings', {
-    active: true,
+    active: false,
     type: '3 Cat',
     name: 'Luna'
   });
