@@ -1,14 +1,49 @@
 import React, { useEffect, useState } from 'react';
 
+const BG_URLS = [
+  '/bg/night1.gif', '/bg/night2.gif', '/bg/night3.gif',
+  '/bg/rain1.gif',  '/bg/rain2.gif',  '/bg/rain3.gif',
+  '/bg/chill1.gif', '/bg/chill2.gif', '/bg/chill3.gif',
+  '/bg/focus1.gif', '/bg/focus2.gif', '/bg/focus3.gif',
+];
+
 export default function LoadingScreen({ onComplete }) {
   const [isFading, setIsFading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Keep the loading screen for 3 seconds for the retro vibe
+    let loaded = 0;
+    const total = BG_URLS.length;
+    let minTimeDone = false;
+    let imagesDone = false;
+
+    const tryComplete = () => {
+      if (minTimeDone && imagesDone) {
+        setIsFading(true);
+        setTimeout(onComplete, 800);
+      }
+    };
+
+    // Preload all background GIFs
+    BG_URLS.forEach(url => {
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        loaded++;
+        setProgress(Math.round((loaded / total) * 100));
+        if (loaded === total) {
+          imagesDone = true;
+          tryComplete();
+        }
+      };
+      img.src = url;
+    });
+
+    // Minimum 3s display time for the retro vibe
     const timer = setTimeout(() => {
-      setIsFading(true);
-      setTimeout(onComplete, 800); 
+      minTimeDone = true;
+      tryComplete();
     }, 3000);
+
     return () => clearTimeout(timer);
   }, [onComplete]);
 
@@ -23,7 +58,7 @@ export default function LoadingScreen({ onComplete }) {
           </div>
         </div>
         
-        <p className="loading-text">LOADING...</p>
+        <p className="loading-text">LOADING... {progress < 100 ? `${progress}%` : 'DONE'}</p>
       </div>
 
       <style>{`
