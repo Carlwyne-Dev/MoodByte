@@ -59,6 +59,7 @@ function App() {
   const [sidebarHidden, setSidebarHidden] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
   const [hasSeenAppWelcome, setHasSeenAppWelcome] = useLocalStorage('moodbyte_welcome_main', false);
+  const [showAbout, setShowAbout] = React.useState(false);
 
   const toggle = (key) => setMinimized(prev => ({ ...prev, [key]: !prev[key] }));
 
@@ -171,8 +172,28 @@ function App() {
             </div>
           </div>
 
+          {/* About Button */}
+          <button className="about-btn" onClick={() => setShowAbout(true)}>About</button>
+
         </div>
       </aside>
+
+      {/* About Modal */}
+      {showAbout && (
+        <div className="about-overlay" onClick={() => setShowAbout(false)}>
+          <div className="about-modal" onClick={e => e.stopPropagation()}>
+            <h2 className="about-modal-title">About MoodByte</h2>
+            <p className="about-modal-text">
+              MoodByte started as a random thought in 2025 — what if a sticky note board had themes, a Pomodoro timer, and a music player? It grew into something more: a safe space for your thoughts, whether it's schoolwork or personal stuff. No hard productivity pressure, just a cozy home for whatever's on your mind.
+            </p>
+            <p className="about-modal-text">
+              This is a full rebuild of the original MoodByte, shelved because of the limits of what I knew at the time. Built late nights from a dorm room, driven by a love for pixel art and retro aesthetics.
+            </p>
+            <p className="about-modal-footer">Made with love. Hope ya'll like it.</p>
+            <button className="about-close-btn" onClick={() => setShowAbout(false)}>Close</button>
+          </div>
+        </div>
+      )}
 
       <style jsx="true">{`
         .app-container {
@@ -394,6 +415,108 @@ function App() {
           color: var(--theme-color);
           background: color-mix(in srgb, var(--theme-color) 15%, transparent);
           border-color: color-mix(in srgb, var(--theme-color) 40%, transparent);
+        }
+
+        /* About Button */
+        .about-btn {
+          width: 100%;
+          padding: 0.75rem 1rem;
+          border-radius: 14px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: var(--text-muted);
+          font-family: 'Outfit', sans-serif;
+          font-size: 0.85rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          text-align: center;
+          letter-spacing: 0.5px;
+        }
+
+        .about-btn:hover {
+          background: rgba(255, 255, 255, 0.08);
+          color: var(--text-color);
+          border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* About Modal */
+        .about-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(6px);
+          z-index: 9000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: fadeIn 0.2s ease;
+        }
+
+        .about-modal {
+          background: rgba(10, 15, 30, 0.97);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 24px;
+          padding: 2.5rem;
+          max-width: 480px;
+          width: 90%;
+          display: flex;
+          flex-direction: column;
+          gap: 1.1rem;
+          box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+          animation: slideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .about-modal-title {
+          font-family: 'Press Start 2P', monospace;
+          font-size: 0.75rem;
+          letter-spacing: 1.5px;
+          color: var(--primary);
+          line-height: 1.6;
+        }
+
+        .about-modal-text {
+          font-family: 'Outfit', sans-serif;
+          font-size: 0.9rem;
+          color: #94a3b8;
+          line-height: 1.8;
+        }
+
+        .about-modal-footer {
+          font-family: 'Outfit', sans-serif;
+          font-size: 0.9rem;
+          color: var(--primary);
+          opacity: 0.8;
+          font-style: italic;
+        }
+
+        .about-close-btn {
+          align-self: flex-end;
+          padding: 0.5rem 1.4rem;
+          border-radius: 10px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: var(--text-color);
+          font-family: 'Outfit', sans-serif;
+          font-size: 0.85rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .about-close-btn:hover {
+          background: var(--primary);
+          border-color: var(--primary);
+          color: #fff;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px) scale(0.97); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
       `}</style>
