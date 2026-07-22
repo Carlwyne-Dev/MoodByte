@@ -12,6 +12,11 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
 - **Automatic Background Rotation** — MoodByte rotates through both default and your custom backgrounds automatically while keeping all defaults available.
 - **Mood-Based Theme Suggestions** — After logging your mood, MoodByte suggests a matching theme (e.g., "Rainy" for a bad mood) and lets you switch with one click.
 
+### Mobile Experience
+- **Responsive Design** — Fully optimized for mobile with a custom bottom navigation bar and fluid app-like interactions.
+- **Floating Music Pill** — On mobile, the music player minimizes into an elegant, auto-hiding pill that floats above the bottom nav.
+- **App-like Sheets** — Mobile views use smooth slide-up sheets and trays instead of modal popups for a native feel.
+
 ### Study Desk
 - **Full Zen Mode** — A distraction-free, full-screen study environment with its own ambient background.
 - **Sticky Note Board** — Pin, drag, and recolor quick thoughts and reminders directly onto the study desk wall.
