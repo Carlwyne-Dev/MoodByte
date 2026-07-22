@@ -478,6 +478,40 @@ export default function DailyQuoteWidget() {
           font-weight: 500;
           text-transform: uppercase;
         }
+
+        @media (max-width: 768px) {
+          .quote-note-center {
+            position: fixed;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 8000;
+          }
+          .quote-note-center:hover {
+            transform: translate(-50%, -50%) scale(1.05);
+          }
+          .quote-modal-card {
+            padding: 2.5rem 1.5rem;
+          }
+          .quote-text {
+            font-size: 1.8rem;
+          }
+          .quote-speech-bubble {
+            left: 50%;
+            width: calc(100vw - 32px);
+            transform-origin: left bottom;
+            transform: translateX(-50%) scale(0.8) translateY(10px);
+          }
+          .quote-speech-bubble.open {
+            transform: translateX(-50%) scale(1) translateY(0);
+          }
+          .quote-speech-bubble::before {
+            left: 32px;
+          }
+          .quote-speech-bubble::after {
+            left: 33px;
+          }
+        }
       `}</style>
     </>
   );
