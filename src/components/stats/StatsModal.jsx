@@ -1,16 +1,10 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { X, CheckSquare, Clock, Smile, Award, Activity, Star, Timer, Heart, Flame, Meh, CloudRain, CloudLightning } from 'lucide-react';
+import { X, CheckSquare, Clock, Award, Activity, Star, Timer, Heart, Flame, Smile } from 'lucide-react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { ACHIEVEMENTS } from './AchievementManager';
 
-const MOODS = [
-  { id: 'great', label: 'Great', Icon: Star, color: '#10b981' },
-  { id: 'good', label: 'Good', Icon: Smile, color: '#3b82f6' },
-  { id: 'okay', label: 'Okay', Icon: Meh, color: '#f59e0b' },
-  { id: 'bad', label: 'Bad', Icon: CloudRain, color: '#ef4444' },
-  { id: 'awful', label: 'Awful', Icon: CloudLightning, color: '#8b5cf6' }
-];
+import { MOODS } from '../../utils/moodConfig';
 
 export default function StatsModal({ onClose }) {
   const [taskHistory] = useLocalStorage('taskHistory', []);
@@ -25,11 +19,15 @@ export default function StatsModal({ onClose }) {
   const totalFocusSessions = pomodoroStats.sessions || 0;
   const totalMoodsLogged = moodHistory.length;
 
-  // Mood counts
-  const moodCounts = { great: 0, good: 0, okay: 0, bad: 0, awful: 0 };
+  // Mood counts — built dynamically from MOODS so it always matches
+  const moodCounts = Object.fromEntries(MOODS.map(m => [m.id, 0]));
   let maxMoodCount = 0;
   moodHistory.forEach(entry => {
-    moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
+    if (moodCounts[entry.mood] !== undefined) {
+      moodCounts[entry.mood]++;
+    } else {
+      moodCounts[entry.mood] = 1;
+    }
     if (moodCounts[entry.mood] > maxMoodCount) {
       maxMoodCount = moodCounts[entry.mood];
     }
@@ -147,7 +145,7 @@ export default function StatsModal({ onClose }) {
                   const pct = maxMoodCount > 0 ? (count / maxMoodCount) * 100 : 0;
                   return (
                     <div key={m.id} className="mood-bar-row">
-                      <div className="mood-bar-label"><m.Icon size={16} color={m.color} /> <span className="m-lbl">{m.label}</span></div>
+                      <div className="mood-bar-label"><m.icon size={16} color={m.color} /> <span className="m-lbl">{m.label}</span></div>
                       <div className="mood-bar-track">
                         <div 
                           className="mood-bar-fill" 

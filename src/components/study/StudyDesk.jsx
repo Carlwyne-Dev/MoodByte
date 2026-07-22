@@ -8,6 +8,8 @@ import ZenMiniPlayer from './ZenMiniPlayer';
 import Player from '../music/Player';
 import StudyPet from './StudyPet';
 import WelcomeModal from '../WelcomeModal';
+import MobileFloatingPlayer from '../mobile/MobileFloatingPlayer';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 function ZenTimer() {
   const [mode, setMode] = useState('focus'); // 'focus' or 'infinite'
@@ -260,6 +262,8 @@ export default function StudyDesk({ onClose }) {
             font-size: 1.2rem;
             color: #38bdf8;
             animation: pulse 1.5s infinite;
+            text-align: center;
+            padding: 0 24px;
           }
           @keyframes pulse {
             0%, 100% { opacity: 0.7; }
@@ -290,8 +294,8 @@ export default function StudyDesk({ onClose }) {
       {/* Top Header */}
       <header className="study-desk-header">
         <div className="study-header-left">
-          <button className="exit-study-btn" onClick={() => setShowExitConfirm(true)}>
-            <X size={18} /> Exit Study Desk
+          <button className="exit-study-btn" onClick={() => setShowExitConfirm(true)} title="Exit Study Desk">
+            <X size={18} /> <span className="exit-text">Exit Study Desk</span>
           </button>
         </div>
         
@@ -450,6 +454,9 @@ export default function StudyDesk({ onClose }) {
         showSettings={showPetSettings} 
         onCloseSettings={() => setShowPetSettings(false)} 
       />
+
+      {/* Floating pill music player — mobile only, Study Desk context */}
+      {window.innerWidth <= 768 && <MobileFloatingPlayer />}
 
       <style>{`
         .study-desk-overlay {
@@ -1014,6 +1021,63 @@ export default function StudyDesk({ onClose }) {
         }
         .confirm-btn:hover {
           background: rgba(239, 68, 68, 0.3);
+        }
+
+        /* ── Mobile Overrides ─────────────────────────────────────────── */
+        @media (max-width: 768px) {
+          .study-desk-container {
+            padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0) 0;
+          }
+          .study-header {
+            padding: 1rem;
+          }
+          .header-left h1 {
+            font-size: 1.2rem;
+          }
+          
+          /* Hide pets and clean up header for mobile */
+          .pet-toggle-btn { display: none !important; }
+          .study-pet-container { display: none !important; }
+          /* Hide mini player on mobile — bottom floating player handles it */
+          .zen-mini-player { display: none !important; }
+          
+          /* Redesign exit button */
+          .exit-text { display: none; }
+          .exit-study-btn {
+            padding: 8px !important;
+            border-radius: 50% !important;
+            background: rgba(239, 68, 68, 0.15) !important;
+            border: 1px solid rgba(239, 68, 68, 0.3) !important;
+            color: #ef4444 !important;
+            justify-content: center;
+          }
+          
+          .study-workspace {
+            flex-direction: column !important;
+            padding: 0 1rem 1rem 1rem !important;
+            gap: 1rem !important;
+            overflow-y: auto !important;
+          }
+          .viewer-pane {
+            min-height: 400px;
+            flex: none !important;
+          }
+          .right-pane {
+            min-height: 400px;
+            flex: none !important;
+          }
+          .zen-player-wrapper {
+            min-height: 120px;
+          }
+          .notepad-pane-container {
+            min-height: 250px;
+          }
+          .library-view {
+            padding: 1rem;
+          }
+          .library-grid {
+            grid-template-columns: 1fr;
+          }
         }
       `}</style>
     </div>,

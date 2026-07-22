@@ -3,13 +3,15 @@ import { createPortal } from 'react-dom';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { 
   Plus, Maximize2, Trash2, Pin, PinOff, Palette, 
-  Type, Move, BarChart2, BookOpen, Settings as SettingsIcon, X
+  Type, Move, BarChart2, BookOpen, Settings as SettingsIcon, X, Calendar as CalendarIcon
 } from 'lucide-react';
 import BgmPlayer from '../bgm/BgmPlayer';
 import StatsModal from '../stats/StatsModal';
 import SettingsModal from '../settings/SettingsModal';
 import StudyDesk from '../study/StudyDesk';
 import DailyQuoteWidget from './DailyQuoteWidget';
+import CalendarWidget from '../study/CalendarWidget';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 const COLORS = [
   { name: 'Lemon',      value: '#fef08a' },
@@ -56,12 +58,14 @@ const FONTS = [
 let noteZCounter = 20;
 
 export default function StickyNoteBoard() {
+  const isMobile = useIsMobile();
   const [notes, setNotes] = useLocalStorage('stickyNotes', []);
   const [activePopup, setActivePopup] = useState(null);
   const [closingPopup, setClosingPopup] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showStudyDesk, setShowStudyDesk] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // Animated close — plays popOut then clears
@@ -92,16 +96,28 @@ export default function StickyNoteBoard() {
   const posRef = useRef({});
 
   const addNote = () => {
-    const id = Date.now().toString();
-    const boardW = window.innerWidth - 360; // exclude sidebar
+    const id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+    const isMobileView = window.innerWidth <= 768;
+    const boardW = isMobileView ? window.innerWidth : window.innerWidth - 360;
     const boardH = window.innerHeight;
-    const noteW = 200, noteH = 200;
-    const x = Math.floor(Math.random() * Math.max(60, boardW - noteW - 40)) + 20;
-    const y = Math.floor(Math.random() * Math.max(60, boardH - noteH - 80)) + 20;
+    const noteW = isMobileView ? 160 : 200;
+    const noteH = isMobileView ? 160 : 200;
+    
+    // Ensure it spawns fully within the visible screen
+    const maxX = Math.max(20, boardW - noteW - 20);
+    const maxY = Math.max(40, boardH - noteH - 120); // leave room for bottom nav
+    
+    const x = Math.floor(Math.random() * maxX) + 10;
+    const y = Math.floor(Math.random() * maxY) + 40; // start slightly below top
+    
     const zIdx = ++noteZCounter;
     const newNote = { id, text: '', color: COLORS[0].value, font: FONTS[0].value, isPinned: false, x, y, zIndex: zIdx };
     posRef.current[id] = { x, y };
-    setNotes(prev => [...prev, newNote]);
+    setNotes(prev => {
+      // Safeguard against strict mode or duplicate glitches
+      const cleanPrev = prev.filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i);
+      return [...cleanPrev, newNote];
+    });
   };
 
   const updateNote = (id, updates) => {
@@ -213,13 +229,17 @@ export default function StickyNoteBoard() {
       <div className="top-left-controls">
         <BgmPlayer />
         <div className="nav-separator" />
+        <button className="stats-btn" onClick={(e) => { e.stopPropagation(); setShowSettings(true); }} title="Settings">
+          <SettingsIcon size={18} />
+          <span className="stats-label">Settings</span>
+        </button>
         <button className="stats-btn" onClick={(e) => { e.stopPropagation(); setShowStats(true); }} title="Your Stats">
           <BarChart2 size={18} />
           <span className="stats-label">Stats</span>
         </button>
-        <button className="stats-btn" onClick={(e) => { e.stopPropagation(); setShowSettings(true); }} title="Settings">
-          <SettingsIcon size={18} />
-          <span className="stats-label">Settings</span>
+        <button className="stats-btn" onClick={(e) => { e.stopPropagation(); setShowCalendar(true); }} title="Calendar">
+          <CalendarIcon size={18} />
+          <span className="stats-label">Calendar</span>
         </button>
         <button className="stats-btn study-btn" onClick={(e) => { e.stopPropagation(); setShowStudyDesk(true); }} title="Zen Study Mode">
           <BookOpen size={18} />
@@ -230,6 +250,7 @@ export default function StickyNoteBoard() {
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
       {showStudyDesk && <StudyDesk onClose={() => setShowStudyDesk(false)} />}
+      {showCalendar && <CalendarWidget onClose={() => setShowCalendar(false)} />}
 
       {showDeleteConfirm && createPortal(
         <div className="custom-confirm-overlay" onClick={() => setShowDeleteConfirm(false)}>
@@ -246,20 +267,30 @@ export default function StickyNoteBoard() {
         document.body
       )}
 
-      {/* Peeking Notepad and Trash */}
-      <div className="notepad-stack" onClick={(e) => { e.stopPropagation(); addNote(); }} title="New Note">
-        <div className="pad-layer layer3" />
-        <div className="pad-layer layer2" />
-        <div className="pad-layer layer1">
-          <span className="pad-text">+ Write Note</span>
+      {/* Action Buttons */}
+      {isMobile ? (
+        <div className="mobile-fab-container">
+          <button className="mobile-fab add-fab" onClick={(e) => { e.stopPropagation(); addNote(); }}>
+            <Plus size={24} />
+          </button>
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="notepad-stack" onClick={(e) => { e.stopPropagation(); addNote(); }} title="New Note">
+            <div className="pad-layer layer3" />
+            <div className="pad-layer layer2" />
+            <div className="pad-layer layer1">
+              <span className="pad-text">+ Write Note</span>
+            </div>
+          </div>
 
-      <div className="trash-stack" onClick={(e) => { e.stopPropagation(); deleteAllNotes(); }} title="Clear All Notes">
-        <div className="trash-layer">
-          <Trash2 size={22} />
-        </div>
-      </div>
+          <div className="trash-stack" onClick={(e) => { e.stopPropagation(); deleteAllNotes(); }} title="Clear All Notes">
+            <div className="trash-layer">
+              <Trash2 size={22} />
+            </div>
+          </div>
+        </>
+      )}
 
       <DailyQuoteWidget />
 
@@ -701,6 +732,50 @@ export default function StickyNoteBoard() {
           font-family: 'Outfit', sans-serif;
         }
         .del-cancel:hover { background: rgba(0,0,0,.04); }
+
+        /* ── Mobile Overrides ─────────────────────────────────────────── */
+        @media (max-width: 768px) {
+          .sticky-note {
+            width: 160px !important;
+            height: 160px !important;
+            min-height: 160px !important;
+            box-sizing: border-box !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+          }
+          .mobile-fab-container {
+            position: fixed;
+            bottom: 96px; /* above mobile nav */
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 9999;
+          }
+          .mobile-fab {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            color: white;
+            cursor: pointer;
+          }
+          .mobile-fab.add-fab {
+            background: #a855f7; /* Theme purple */
+          }
+          .mobile-fab.trash-fab {
+            background: #ef4444; /* Danger red */
+          }
+          .notepad-stack, .trash-stack {
+            display: none !important;
+          }
+          .top-left-controls {
+            display: none !important;
+          }
+          .note-header {
+            opacity: 1 !important;
+          }
+        }
       `}</style>
     </div>
   );

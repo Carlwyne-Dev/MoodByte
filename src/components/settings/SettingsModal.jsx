@@ -273,6 +273,29 @@ export default function SettingsModal({ onClose }) {
           from { opacity: 0; transform: scale(0.95) translateY(10px); }
           to { opacity: 1; transform: scale(1) translateY(0); }
         }
+
+        @media (max-width: 768px) {
+          .settings-overlay {
+            align-items: flex-end;
+            padding-bottom: 0;
+          }
+          .settings-modal {
+            width: 100% !important;
+            max-width: 100% !important;
+            border-radius: 24px 24px 0 0;
+            max-height: 88dvh;
+            overflow-y: auto;
+          }
+          .theme-wallpapers-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+          .settings-header {
+            padding: 16px 18px;
+          }
+          .settings-body {
+            padding: 16px 18px;
+          }
+        }
       `}</style>
     </div>,
     document.body

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Play, Pause, SkipBack, SkipForward, Shuffle, Repeat,
-  Volume2, VolumeX, Plus, Trash2, Music2, X, ChevronDown, ChevronUp, GripVertical, Maximize2
+  Volume2, VolumeX, Plus, Trash2, Music2, X, ChevronDown, ChevronUp, GripVertical, Maximize2, MoreHorizontal
 } from 'lucide-react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { saveTrackBlob, getTrackBlob, deleteTrackBlob } from '../../hooks/useAudioStorage';
@@ -20,7 +20,7 @@ function formatTime(sec) {
   return `${m}:${s}`;
 }
 
-export default function Player() {
+export default function Player({ isMobile = false }) {
   const audioRef = useRef(null);
   const fileInputRef = useRef(null);
   const progressRef = useRef(null);
@@ -43,6 +43,7 @@ export default function Player() {
   const [spotifyEmbed, setSpotifyEmbed] = useState(null);
   const [spotifyHistory, setSpotifyHistory] = useLocalStorage('spotify_history', []);
   const [showSpotifyConfirm, setShowSpotifyConfirm] = useState(false);
+  const [showMobileOptions, setShowMobileOptions] = useState(false);
   const [popupPos, setPopupPos] = useState({ top: 0, left: 0 });
   const [isOverflowing, setIsOverflowing] = useState(false);
   // blobUrls: map of id -> object URL (rebuilt each session from IndexedDB)
@@ -475,7 +476,27 @@ export default function Player() {
   };
 
   return (
-    <div className="player inner-glass" ref={playerRef}>
+    <div
+      className={
+        isMobile
+          ? `player ${showSpotify || spotifyEmbed ? 'is-spotify' : 'is-local'}`
+          : 'player inner-glass'
+      }
+      style={isMobile && (showSpotify || spotifyEmbed) ? {
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '8px',
+        gap: 0,
+        background: '#0f172a',
+        borderRadius: '20px',
+        border: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+        overflow: 'hidden',
+        height: 'fit-content',
+        minHeight: 0,
+      } : {}}
+      ref={playerRef}
+    >
       <audio ref={audioRef} preload="metadata" />
 
       {/* Mode tabs */}
@@ -539,24 +560,45 @@ export default function Player() {
 
       {/* Spotify embed view */}
       {spotifyEmbed && (
-        <div className="spotify-view">
-          <div className="spotify-scroll-wrap">
-            <iframe
-              src={`https://open.spotify.com/embed/${spotifyEmbed.type}/${spotifyEmbed.id}?utm_source=generator&theme=0`}
-              width="100%"
-              height={spotifyEmbed.type === 'track' ? '80' : '152'}
-              frameBorder="0"
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              style={{ borderRadius: '12px', minWidth: '320px', display: 'block' }}
-              title="Spotify"
-            />
-          </div>
-          <div className="spotify-action-row">
-            <button className="icon-btn close-btn" title="Close Spotify" onClick={() => setShowSpotifyConfirm(true)}>
-              <X size={16} />
-            </button>
-          </div>
+        <div 
+          className="spotify-view"
+          style={isMobile ? { gap: 0, flex: 'none', height: 'auto', padding: '16px 12px' } : {}}
+        >
+          {isMobile ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#1DB954', width: '100%', fontFamily: "'Outfit', sans-serif", fontSize: '0.9rem', fontWeight: 500 }}>
+              <SpotifyIcon size={16} />
+              <span>Listening on Spotify</span>
+              <div className="info-wrapper" style={{ marginLeft: 0 }}>
+                <Info size={14} className="info-icon" />
+                <div className="info-tooltip" style={{ bottom: '150%', top: 'auto', left: '50%', transform: 'translateX(-50%)' }}>
+                  Spotify is playing. Tap the pill below to pause/play, or use the desktop player to change tracks.
+                </div>
+              </div>
+            </div>
+          ) : (
+            <React.Fragment>
+              <div className="spotify-scroll-wrap">
+                <iframe
+                  src={`https://open.spotify.com/embed/${spotifyEmbed.type}/${spotifyEmbed.id}?utm_source=generator&theme=0`}
+                  width="100%"
+                  height="352"
+                  frameBorder="0"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  style={{ borderRadius: '12px', minWidth: '320px', display: 'block' }}
+                  title="Spotify"
+                />
+              </div>
+              <div style={{ textAlign: 'center', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>
+                Log in on this browser to hear full song
+              </div>
+              <div className="spotify-action-row">
+                <button className="icon-btn close-btn" title="Close Spotify" onClick={() => setShowSpotifyConfirm(true)}>
+                  <X size={16} />
+                </button>
+              </div>
+            </React.Fragment>
+          )}
         </div>
       )}
 
@@ -623,22 +665,87 @@ export default function Player() {
       {!showSpotify && !spotifyEmbed && (
         <div className="action-row" ref={actionRowRef}>
           <div className="action-top-row">
-            <button className="pill-btn primary" onClick={() => fileInputRef.current.click()}>
-              <Plus size={14} /> Add Local
-            </button>
+            {/* Desktop: + Add Local button */}
+            {!isMobile && (
+              <button className="pill-btn primary" onClick={() => fileInputRef.current.click()}>
+                <Plus size={14} /> Add Local
+              </button>
+            )}
+            {/* Mobile: ··· and Spotify icon */}
+            {isMobile && (
+              <button className="pill-btn" onClick={() => { 
+                setShowMobileOptions(true);
+                if (showQueue) closePopup('queue');
+              }}>
+                <MoreHorizontal size={14} />
+              </button>
+            )}
             <input ref={fileInputRef} type="file" accept="audio/*" multiple hidden onChange={importFiles} />
-            {queue.length > 0 && (
+            {/* Desktop: Queue button */}
+            {!isMobile && queue.length > 0 && (
               <button className="pill-btn" onClick={() => togglePopup('queue')}>
                 <Music2 size={14} /> Queue ({queue.length})
+              </button>
+            )}
+            {/* Mobile: Spotify icon shortcut */}
+            {isMobile && (
+              <button className="pill-btn" onClick={() => {
+                if (audioRef.current && !audioRef.current.paused) {
+                  fadeOutLocal(() => setShowSpotify(true));
+                } else {
+                  setShowSpotify(true);
+                }
+              }}>
+                <SpotifyIcon size={14} />
               </button>
             )}
           </div>
         </div>
       )}
 
+      {/* Mobile Options Modal */}
+      {showMobileOptions && createPortal(
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 9999, touchAction: 'none' }} onPointerDown={() => setShowMobileOptions(false)} />
+          <div className="player-portal-popup mobile-menu-popup" style={{ 
+            zIndex: 10000,
+            ...(isMobile ? {
+              bottom: 'calc(160px + env(safe-area-inset-bottom, 0px))',
+              right: 16,
+              left: 'auto',
+              top: 'auto',
+              transform: 'none',
+              width: 'max-content',
+              minWidth: 200,
+              padding: 12
+            } : {})
+          }}>
+            <div className="queue-list" style={{ gap: '8px' }}>
+              <button className="queue-item" onClick={() => { setShowMobileOptions(false); togglePopup('queue'); }}>
+                <Music2 size={16} /> Open Queue
+              </button>
+              <button className="queue-item" onClick={() => { setShowMobileOptions(false); fileInputRef.current.click(); }}>
+                <Plus size={16} /> Add Local Music
+              </button>
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
+
       {/* Queue popup only — rendered via portal */}
+      {/* Desktop/Mobile Queue Popup */}
       {(showQueue || closingQueue) && queue.length > 0 && createPortal(
-        <div ref={popupRef} className={`player-portal-popup ${closingQueue ? 'closing' : ''}`} style={{ top: `${popupPos.top}px`, left: `${popupPos.left}px` }}>
+        <div ref={popupRef} className={`player-portal-popup ${closingQueue ? 'closing' : ''}`} style={{ 
+          top: isMobile ? 'auto' : `${popupPos.top}px`, 
+          left: isMobile ? '50%' : `${popupPos.left}px`,
+          ...(isMobile ? {
+            bottom: 'calc(160px + env(safe-area-inset-bottom, 0px))',
+            transform: 'translateX(-50%)',
+            width: 'calc(100% - 32px)',
+            maxWidth: 420
+          } : {})
+        }}>
           <div className="player-popup-content">
               <div className="popup-label">Up Next</div>
               <div className="queue-list">
@@ -675,6 +782,10 @@ export default function Player() {
       )}
 
       <style jsx="true">{`
+        .show-on-mobile {
+          display: none;
+        }
+
         .player {
           display: flex;
           flex-direction: column;
@@ -1020,10 +1131,9 @@ export default function Player() {
         .volume-row {
           display: flex;
           align-items: center;
-          gap: 12px;
-          background: rgba(0,0,0,0.2);
-          padding: 6px 12px;
-          border-radius: 20px;
+          justify-content: center;
+          gap: 10px;
+          padding: 4px 1rem;
         }
         .icon-btn {
           background: none;
@@ -1040,7 +1150,13 @@ export default function Player() {
           color: #fff;
         }
         .vol-track {
-          border-radius: 2px; position: relative; cursor: pointer;
+          flex: 1;
+          max-width: 160px;
+          height: 4px;
+          background: rgba(255,255,255,0.12);
+          border-radius: 2px;
+          position: relative;
+          cursor: pointer;
         }
         .vol-fill {
           position: absolute; left: 0; top: 0; height: 100%;
@@ -1229,6 +1345,159 @@ export default function Player() {
         .player-portal-popup .q-del:hover { color: #f87171; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+
+        /* ── Mobile floating pill styles (only inside .mobile-player-wrapper) ── */
+        .mobile-player-wrapper .player.is-local {
+          flex-direction: row !important;
+          align-items: center !important;
+          padding: 8px 16px !important;
+          border-radius: 40px !important;
+          gap: 12px !important;
+          background: #0f172a !important;
+          backdrop-filter: none !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+        }
+
+        .mobile-player-wrapper .player.is-spotify {
+          background: #0f172a !important;
+          backdrop-filter: none !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.5) !important;
+          border-radius: 20px !important;
+          padding: 8px !important;
+          height: fit-content !important;
+          max-height: fit-content !important;
+          min-height: 0 !important;
+          gap: 0 !important;
+          overflow: hidden !important;
+        }
+        
+        .mobile-player-wrapper .player.is-spotify .spotify-view {
+          gap: 0 !important;
+          flex: none !important;
+          height: auto !important;
+        }
+        
+        .mobile-player-wrapper .player.is-spotify .spotify-scroll-wrap {
+          padding: 0 !important;
+          margin: 0 !important;
+          flex: none !important;
+          overflow: hidden !important;
+        }
+        
+        .mobile-player-wrapper .player.is-spotify .spotify-action-row {
+          display: none !important;
+          height: 0 !important;
+          overflow: hidden !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        
+        .mobile-player-wrapper .player.is-spotify iframe {
+          min-width: 0 !important;
+          width: 100% !important;
+          display: block !important;
+          pointer-events: auto !important;
+          position: relative !important;
+          z-index: 10 !important;
+        }
+        
+        .mobile-player-wrapper .player.is-spotify .mode-tabs {
+          display: none !important;
+          height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+        }
+
+        .mobile-player-wrapper .show-on-mobile { display: flex !important; }
+        .mobile-player-wrapper .hide-on-mobile { display: none !important; }
+
+        .mobile-player-wrapper .player.is-local .mode-tabs, 
+        .mobile-player-wrapper .player.is-local .progress-wrap, 
+        .mobile-player-wrapper .player.is-local .secondary-controls, 
+        .mobile-player-wrapper .player.is-local .volume-row, 
+        .mobile-player-wrapper .player.is-local .track-time {
+          display: none !important;
+        }
+
+        .mobile-player-wrapper .player.is-local .track-info {
+          flex: 1 !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+        
+        .mobile-player-wrapper .player.is-local .track-name-wrap {
+          font-size: 0.85rem !important;
+        }
+
+        .mobile-player-wrapper .player.is-local .main-controls {
+          flex-shrink: 0 !important;
+          margin: 0 !important;
+          gap: 8px !important;
+        }
+
+        .mobile-player-wrapper .player.is-local .action-row {
+          flex-shrink: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border: none !important;
+        }
+        
+        .mobile-player-wrapper .player.is-local .action-top-row {
+          gap: 6px !important;
+        }
+        
+        .mobile-player-wrapper .player.is-local .action-top-row .pill-btn {
+          padding: 0 !important;
+          border-radius: 50% !important;
+          width: 32px !important;
+          height: 32px !important;
+          justify-content: center !important;
+          font-size: 0 !important;
+        }
+        
+        .mobile-player-wrapper .player.is-local .action-top-row .pill-btn svg {
+          margin: 0 !important;
+          width: 14px !important;
+          height: 14px !important;
+        }
+
+        /* ── Mobile portal popups (rendered via Portal, outside .mobile-player-wrapper) ── */
+        @media (max-width: 768px) {
+          .player-portal-popup {
+            top: auto !important;
+            bottom: calc(160px + env(safe-area-inset-bottom, 0px)) !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: calc(100% - 32px) !important;
+            max-width: 420px !important;
+            box-shadow: 0 10px 48px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.1);
+          }
+          .player-popup-tail {
+            display: none !important;
+          }
+          .mobile-menu-popup {
+            width: max-content !important;
+            min-width: 200px !important;
+            bottom: calc(160px + env(safe-area-inset-bottom, 0px)) !important;
+            left: auto !important;
+            right: 16px !important;
+            top: auto !important;
+            transform: none !important;
+            padding: 12px !important;
+          }
+          .mobile-menu-popup .queue-item {
+            justify-content: flex-start !important;
+            gap: 12px !important;
+            padding: 12px 16px !important;
+          }
+        }
+
       `}</style>
     </div>
   );

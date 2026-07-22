@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { Check, Trash2, ClipboardList, Sparkles, History, X } from 'lucide-react';
+import { Check, Trash2, ClipboardList, Sparkles, History, X, Plus, Calendar as CalendarIcon } from 'lucide-react';
+import TaskDatePicker from './TaskDatePicker';
 
 export default function TaskList() {
   const [tasks, setTasks] = useLocalStorage('tasks', []);
@@ -12,7 +13,11 @@ export default function TaskList() {
   const [removingIds, setRemovingIds] = useState(new Set());
   const [showHistory, setShowHistory] = useState(false);
   const [closingHistory, setClosingHistory] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [popupPos, setPopupPos] = useState({ top: 0, left: 0 });
+  const [pickerPos, setPickerPos] = useState({ top: 0, left: 0 });
+  const [pendingDate, setPendingDate] = useState(null); // 'YYYY-MM-DD' or null
+  const calBtnRef = useRef(null);
   const inputRef = useRef(null);
   const containerRef = useRef(null);
   const popupRef = useRef(null);
@@ -25,7 +30,9 @@ export default function TaskList() {
     }, 180);
   };
 
-  // Active position sync
+  const closeCalendar = () => setShowCalendar(false);
+
+  // Sync history popup position on scroll/resize
   useEffect(() => {
     if (!showHistory) return;
     const sidebarContent = document.querySelector('.sidebar-content');
@@ -36,32 +43,31 @@ export default function TaskList() {
       const taskRect = containerRef.current.getBoundingClientRect();
       const sidebarRect = sidebar.getBoundingClientRect();
       const contentRect = sidebarContent.getBoundingClientRect();
-      
       if (taskRect.bottom < contentRect.top || taskRect.top > contentRect.bottom) {
         closeHistory();
         return;
       }
-
       setPopupPos({
-        top: taskRect.top + (taskRect.height / 2),
+        top: taskRect.top + taskRect.height / 2,
         left: sidebarRect ? sidebarRect.left - 260 : taskRect.left - 280
       });
     };
 
     sidebarContent.addEventListener('scroll', updatePosition, { passive: true });
     window.addEventListener('resize', updatePosition);
-    updatePosition(); 
-
+    updatePosition();
     return () => {
       sidebarContent.removeEventListener('scroll', updatePosition);
       window.removeEventListener('resize', updatePosition);
     };
   }, [showHistory]);
 
-  // Click outside to close
+  // Click outside to close history popup
   useEffect(() => {
+    if (!showHistory) return;
     const handleClickOutside = (e) => {
-      if (showHistory && !closingHistory && popupRef.current && !popupRef.current.contains(e.target) && containerRef.current && !containerRef.current.contains(e.target)) {
+      if (popupRef.current && !popupRef.current.contains(e.target) &&
+          containerRef.current && !containerRef.current.contains(e.target)) {
         closeHistory();
       }
     };
@@ -72,20 +78,46 @@ export default function TaskList() {
   const toggleHistory = (e) => {
     e.stopPropagation();
     if (showHistory) closeHistory();
-    else setShowHistory(true);
+    else {
+      if (showCalendar) closeCalendar();
+      setShowHistory(true);
+    }
+  };
+  
+  const toggleCalendar = (e) => {
+    e.stopPropagation();
+    if (showCalendar) { closeCalendar(); return; }
+    if (showHistory) closeHistory();
+    // Position picker to the left of the sidebar
+    const btn = calBtnRef.current;
+    const sidebar = document.querySelector('.sidebar');
+    if (btn && sidebar) {
+      const btnRect = btn.getBoundingClientRect();
+      const sidebarRect = sidebar.getBoundingClientRect();
+      setPickerPos({
+        top: btnRect.top + btnRect.height / 2,
+        left: sidebarRect.left - 246
+      });
+    }
+    setShowCalendar(true);
   };
 
   const addTask = (e) => {
     e.preventDefault();
     if (!newTaskText.trim()) return;
+    const uid = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const newTask = {
-      id: Date.now().toString(),
+      id: uid,
       text: newTaskText.trim(),
       completed: false,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      ...(pendingDate ? { calendarDate: pendingDate } : {})
     };
-    setTasks([newTask, ...tasks]);
+    setTasks(prev => [newTask, ...prev]);
     setNewTaskText('');
+    setPendingDate(null);
   };
 
   const toggleTask = (id) => {
@@ -162,15 +194,36 @@ export default function TaskList() {
           onBlur={() => setFocused(false)}
           className="task-input"
         />
-        {newTaskText.trim() && (
-          <button
-            type="submit"
-            className="add-btn"
-            title="Add task"
-          >
-            Add
-          </button>
-        )}
+        <div className="input-actions" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          {pendingDate && (
+            <span className="task-date-chip">
+              {new Date(pendingDate + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              <button type="button" className="task-date-chip-clear" onClick={() => setPendingDate(null)}>
+                <X size={9} />
+              </button>
+            </span>
+          )}
+          {newTaskText.trim() && (
+            <button
+              ref={calBtnRef}
+              type="button"
+              className={`add-btn icon-only ${showCalendar ? 'active' : ''} ${pendingDate ? 'has-date' : ''}`}
+              onClick={toggleCalendar}
+              title="Set due date"
+            >
+              <CalendarIcon size={14} />
+            </button>
+          )}
+          {newTaskText.trim() && (
+            <button
+              type="submit"
+              className="add-btn icon-only"
+              title="Add task"
+            >
+              <Plus size={14} />
+            </button>
+          )}
+        </div>
       </form>
 
       {/* Filter tabs */}
@@ -217,7 +270,15 @@ export default function TaskList() {
                 {task.completed && <Check size={11} strokeWidth={3} />}
               </span>
             </button>
-            <span className="task-text">{task.text}</span>
+            <div className="task-text-group">
+              <span className="task-text">{task.text}</span>
+              {task.calendarDate && (
+                <span className="task-date-label">
+                  <CalendarIcon size={9} />
+                  {new Date(task.calendarDate + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                </span>
+              )}
+            </div>
             <button
               className="delete-btn"
               onClick={() => deleteTask(task.id)}
@@ -267,6 +328,19 @@ export default function TaskList() {
           <div className="task-popup-tail" />
         </div>,
         document.body
+      )}
+
+      {/* Date Picker Portal */}
+      {showCalendar && (
+        <TaskDatePicker
+          top={pickerPos.top}
+          left={pickerPos.left}
+          onClose={closeCalendar}
+          onConfirm={(dateKey) => {
+            setPendingDate(dateKey);
+            closeCalendar();
+          }}
+        />
       )}
 
       <style jsx="true">{`
@@ -338,6 +412,12 @@ export default function TaskList() {
           transition: opacity 0.15s, transform 0.15s;
           white-space: nowrap;
           animation: fadeInBtn 0.15s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .add-btn.icon-only {
+          padding: 0.4rem;
         }
         @keyframes fadeInBtn {
           from { opacity: 0; transform: scale(0.9); }
@@ -466,15 +546,51 @@ export default function TaskList() {
         }
         .checkbox-inner { display: flex; align-items: center; justify-content: center; color: white; }
 
-        /* Task text */
+        /* Task text group */
+        .task-text-group {
+          flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+        }
         .task-text {
-          flex: 1; font-size: 0.83rem; color: var(--text-color);
+          font-size: 0.83rem; color: var(--text-color);
           word-break: break-word; line-height: 1.4;
           transition: all 0.3s;
         }
         .task-item.completed .task-text {
           text-decoration: line-through;
           opacity: 0.4;
+        }
+        .task-date-label {
+          display: inline-flex; align-items: center; gap: 3px;
+          font-size: 0.64rem; font-family: 'Outfit', sans-serif;
+          color: rgba(168,85,247,0.7);
+          line-height: 1;
+        }
+        .task-item.completed .task-date-label { opacity: 0.35; }
+
+        /* Date chip in input row */
+        .task-date-chip {
+          display: inline-flex; align-items: center; gap: 4px;
+          background: rgba(168,85,247,0.15);
+          border: 1px solid rgba(168,85,247,0.35);
+          border-radius: 20px; padding: 2px 8px 2px 9px;
+          font-size: 0.68rem; font-family: 'Outfit', sans-serif;
+          color: rgba(200,160,255,0.9); white-space: nowrap;
+          animation: fadeInBtn 0.15s ease;
+        }
+        .task-date-chip-clear {
+          background: none; border: none; padding: 0;
+          cursor: pointer; color: rgba(200,160,255,0.6);
+          display: flex; align-items: center; line-height: 1;
+        }
+        .task-date-chip-clear:hover { color: #f87171; }
+
+        /* Calendar button has-date tint */
+        .add-btn.has-date {
+          background: rgba(168,85,247,0.2);
+          color: rgba(200,160,255,0.9);
+        }
+        .add-btn.active {
+          background: rgba(168,85,247,0.3);
         }
 
         /* Delete button */

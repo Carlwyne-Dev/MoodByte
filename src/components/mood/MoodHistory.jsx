@@ -9,7 +9,7 @@ export default function MoodHistory() {
   if (history.length === 0) {
     return (
       <div className="empty-history fade-in">
-        <p className="font-handwriting">No mood entries yet. Go to the dashboard to log how you feel!</p>
+        <p className="font-handwriting">No mood entries yet. Log how you're feeling today to start your journey!</p>
       </div>
     );
   }

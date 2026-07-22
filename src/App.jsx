@@ -10,6 +10,8 @@ import WelcomeModal from './components/WelcomeModal';
 import AchievementManager from './components/stats/AchievementManager';
 import StreakCounter from './components/stats/StreakCounter';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useIsMobile } from './hooks/useIsMobile';
+import MobileLayout from './components/mobile/MobileLayout';
 
 import { Moon, CloudRain, Wind, Zap, ChevronRight, ChevronLeft } from 'lucide-react';
 
@@ -55,6 +57,7 @@ function BackgroundManager({ bgImage }) {
 
 function App() {
   const { theme, bgImage, changeTheme } = useTheme();
+  const isMobile = useIsMobile();
   const [minimized, setMinimized] = React.useState({});
   const [sidebarHidden, setSidebarHidden] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -62,6 +65,9 @@ function App() {
   const [showAbout, setShowAbout] = React.useState(false);
 
   const toggle = (key) => setMinimized(prev => ({ ...prev, [key]: !prev[key] }));
+
+  // Render mobile layout on small screens
+  if (isMobile) return <MobileLayout />;
 
   return (
     <div className="app-container" style={{ '--sidebar-offset': sidebarHidden ? '40px' : '360px' }}>

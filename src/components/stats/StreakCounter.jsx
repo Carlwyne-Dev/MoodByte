@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 export default function StreakCounter() {
+  const isMobile = useIsMobile();
   const [taskHistory] = useLocalStorage('taskHistory', []);
   const [tasks] = useLocalStorage('tasks', []);
   const [pomodoroStats] = useLocalStorage('pomodoroStats', { sessions: 0 });
@@ -84,8 +86,14 @@ export default function StreakCounter() {
     <div
       style={{
         position: 'fixed',
-        top: '24px',
-        right: 'calc(var(--sidebar-offset, 360px) + 32px)',
+        ...(isMobile ? {
+          top: '72px',
+          right: '14px',
+        } : {
+          top: '24px',
+          right: 'calc(var(--sidebar-offset, 360px) + 32px)',
+          transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }),
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
@@ -96,7 +104,6 @@ export default function StreakCounter() {
         borderRadius: '20px',
         border: '1px solid rgba(255,255,255,0.12)',
         zIndex: 1000,
-        transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         cursor: 'default',
       }}
       onMouseEnter={() => setHovered(true)}

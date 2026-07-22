@@ -5,8 +5,10 @@ import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useTheme } from '../../context/ThemeContext';
 import { Palette, ArrowRight, History, X, Upload } from 'lucide-react';
 import MoodHistory from './MoodHistory';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 export default function MoodSelector() {
+  const isMobile = useIsMobile();
   const [selectedMood, setSelectedMood] = useState(null);
   const [reflection, setReflection] = useState('');
   const [history, setHistory] = useLocalStorage('moodHistory', []);
@@ -208,7 +210,15 @@ export default function MoodSelector() {
 
       {/* History Portal Popup */}
       {(showHistory || closingHistory) && createPortal(
-        <div ref={popupRef} className={`mood-portal-popup ${closingHistory ? 'closing' : ''}`} style={{ top: `${popupPos.top}px`, left: `${popupPos.left}px` }}>
+        <div ref={popupRef} className={`mood-portal-popup ${closingHistory ? 'closing' : ''}`} style={{ 
+          top: isMobile ? '50%' : `${popupPos.top}px`, 
+          left: isMobile ? '50%' : `${popupPos.left}px`,
+          ...(isMobile ? {
+            transform: 'translate(-50%, -50%)',
+            width: '90%',
+            maxWidth: '350px'
+          } : {})
+        }}>
           <div className="mood-popup-content">
             <div className="popup-header">
               <span className="popup-label">Mood Log</span>
