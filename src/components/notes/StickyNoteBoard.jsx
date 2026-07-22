@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { 
   Plus, Maximize2, Trash2, Pin, PinOff, Palette, 
-  Type, Move, BarChart2, BookOpen, Settings as SettingsIcon, X, Calendar as CalendarIcon
+  Type, Move, BarChart2, BookOpen, Settings as SettingsIcon, X, Calendar as CalendarIcon, StickyNote
 } from 'lucide-react';
 import BgmPlayer from '../bgm/BgmPlayer';
 import StatsModal from '../stats/StatsModal';
@@ -184,8 +184,17 @@ export default function StickyNoteBoard() {
 
     const dx = e.clientX - dragging.current.startMouseX;
     const dy = e.clientY - dragging.current.startMouseY;
-    const newX = dragging.current.startNoteX + dx;
-    const newY = dragging.current.startNoteY + dy;
+    let newX = dragging.current.startNoteX + dx;
+    let newY = dragging.current.startNoteY + dy;
+
+    if (isMobile) {
+      // Keep notes inside the screen boundaries on mobile
+      const noteW = 160; 
+      const noteH = 160;
+      const navH = 80; // roughly the bottom nav height
+      newX = Math.max(0, Math.min(newX, window.innerWidth - noteW));
+      newY = Math.max(0, Math.min(newY, window.innerHeight - noteH - navH));
+    }
 
     dragging.current.currentX = newX;
     dragging.current.currentY = newY;
@@ -271,7 +280,7 @@ export default function StickyNoteBoard() {
       {isMobile ? (
         <div className="mobile-fab-container">
           <button className="mobile-fab add-fab" onClick={(e) => { e.stopPropagation(); addNote(); }}>
-            <Plus size={24} />
+            <StickyNote size={22} />
           </button>
         </div>
       ) : (

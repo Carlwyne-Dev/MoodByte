@@ -31,12 +31,12 @@ const THEMES = [
 ];
 
 function BackgroundLayer({ bgImage }) {
-  const [layers, setLayers] = useState([{ id: Date.now(), src: bgImage }]);
+  const [layers, setLayers] = useState([{ id: Date.now() + Math.random().toString(36).substring(7), src: bgImage }]);
 
   useEffect(() => {
     setLayers(prev => {
       if (prev[prev.length - 1].src === bgImage) return prev;
-      return [...prev, { id: Date.now(), src: bgImage }];
+      return [...prev, { id: Date.now() + Math.random().toString(36).substring(7), src: bgImage }];
     });
     const timer = setTimeout(() => {
       setLayers(prev => prev.slice(-1));
