@@ -19,8 +19,6 @@ const SYNC_KEYS = [
   'studyPetTreats',
   'theme',
   'customBgsV2',
-  'player_queue_meta',
-  'player_currentIdx',
   'player_volume',
   'player_shuffle',
   'player_repeat',
