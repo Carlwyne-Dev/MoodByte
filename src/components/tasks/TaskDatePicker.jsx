@@ -125,6 +125,8 @@ export default function TaskDatePicker({ top, left, onConfirm, onClose }) {
           box-shadow: 0 14px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07);
           z-index: 99999;
           overflow: hidden;
+          user-select: none;
+          -webkit-user-select: none;
           animation: tdpPopIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
         }
         @keyframes tdpPopIn {

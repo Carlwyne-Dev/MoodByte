@@ -300,6 +300,8 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
           box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
           overflow: hidden;
           pointer-events: auto;
+          user-select: none;
+          -webkit-user-select: none;
         }
         .calendar-widget:not(.inline-mode) {
           position: absolute; top: 0; left: 0;

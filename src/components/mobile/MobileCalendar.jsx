@@ -168,6 +168,8 @@ export default function MobileCalendar() {
           width: 100%;
           padding: 16px 14px;
           box-sizing: border-box;
+          user-select: none;
+          -webkit-user-select: none;
         }
         .mob-cal-nav {
           display: flex;
