@@ -6,15 +6,41 @@ export default function SyncToast() {
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
-    const handleToast = (e) => {
-      setMessage(e.detail);
-      setTimeout(() => {
+    let queuedMsg = null;
+    let timer = null;
+
+    const displayMessage = (msg) => {
+      setMessage(msg);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
         setMessage(null);
       }, 4000);
     };
 
+    const handleToast = (e) => {
+      // If loading screen is currently showing, queue it
+      if (document.querySelector('.loading-screen')) {
+        queuedMsg = e.detail;
+      } else {
+        displayMessage(e.detail);
+      }
+    };
+
+    const handleAppReady = () => {
+      if (queuedMsg) {
+        displayMessage(queuedMsg);
+        queuedMsg = null;
+      }
+    };
+
     window.addEventListener('sync-toast', handleToast);
-    return () => window.removeEventListener('sync-toast', handleToast);
+    window.addEventListener('app-ready', handleAppReady);
+    
+    return () => {
+      window.removeEventListener('sync-toast', handleToast);
+      window.removeEventListener('app-ready', handleAppReady);
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   if (!message) return null;

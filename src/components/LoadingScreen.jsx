@@ -19,7 +19,10 @@ export default function LoadingScreen({ onComplete }) {
     const tryComplete = () => {
       if (minTimeDone && imagesDone) {
         setIsFading(true);
-        setTimeout(onComplete, 800);
+        setTimeout(() => {
+          window.dispatchEvent(new Event('app-ready'));
+          onComplete();
+        }, 800);
       }
     };
 

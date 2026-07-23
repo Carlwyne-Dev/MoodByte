@@ -63,7 +63,9 @@ function App() {
   const isMobile = useIsMobile();
   const [minimized, setMinimized] = React.useState({});
   const [sidebarHidden, setSidebarHidden] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = React.useState(() => {
+    return !sessionStorage.getItem('moodbyte_session_started');
+  });
   const [hasSeenAppWelcome, setHasSeenAppWelcome] = useLocalStorage('moodbyte_welcome_main', false);
   const [showAbout, setShowAbout] = React.useState(false);
 
@@ -82,7 +84,10 @@ function App() {
       <SyncToast />
       <AchievementManager />
       <StreakCounter />
-      {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
+      {isLoading && <LoadingScreen onComplete={() => {
+        sessionStorage.setItem('moodbyte_session_started', 'true');
+        setIsLoading(false);
+      }} />}
       {!isLoading && !hasSeenAppWelcome && (
         <WelcomeModal 
           title="Welcome to MoodByte!" 

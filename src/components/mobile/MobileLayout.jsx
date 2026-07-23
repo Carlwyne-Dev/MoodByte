@@ -67,7 +67,9 @@ export default function MobileLayout() {
   const { bgImage, theme, changeTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('home');
   const [showStudy, setShowStudy] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => {
+    return !sessionStorage.getItem('moodbyte_session_started_mobile');
+  });
   const [hasSeenWelcome, setHasSeenWelcome] = useLocalStorage('moodbyte_welcome_main', false);
   const [showMorePopup, setShowMorePopup] = useState(false);
   const [activeTray, setActiveTray] = useState(null); // 'tasks' | 'calendar'
@@ -127,7 +129,10 @@ export default function MobileLayout() {
     <div className="mob-layout">
       <AchievementManager />
       <StreakCounter />
-      {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
+      {isLoading && <LoadingScreen onComplete={() => {
+        sessionStorage.setItem('moodbyte_session_started_mobile', 'true');
+        setIsLoading(false);
+      }} />}
       {!isLoading && !hasSeenWelcome && (
         <WelcomeModal
           title="Welcome to MoodByte!"
