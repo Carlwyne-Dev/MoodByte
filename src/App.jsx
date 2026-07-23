@@ -11,6 +11,7 @@ import AchievementManager from './components/stats/AchievementManager';
 import StreakCounter from './components/stats/StreakCounter';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useIsMobile } from './hooks/useIsMobile';
+import { useCloudSync } from './hooks/useCloudSync';
 import MobileLayout from './components/mobile/MobileLayout';
 
 import { Moon, CloudRain, Wind, Zap, ChevronRight, ChevronLeft } from 'lucide-react';
@@ -56,6 +57,7 @@ function BackgroundManager({ bgImage }) {
 }
 
 function App() {
+  useCloudSync(); // Initialize cloud sync
   const { theme, bgImage, changeTheme } = useTheme();
   const isMobile = useIsMobile();
   const [minimized, setMinimized] = React.useState({});
