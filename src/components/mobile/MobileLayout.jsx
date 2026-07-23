@@ -129,7 +129,7 @@ export default function MobileLayout() {
     <div className="mob-layout">
       <AchievementManager />
       <StreakCounter />
-      {isLoading && <LoadingScreen onComplete={() => {
+      {isLoading && <LoadingScreen bgImage={bgImage} onComplete={() => {
         sessionStorage.setItem('moodbyte_session_started_mobile', 'true');
         setIsLoading(false);
       }} />}

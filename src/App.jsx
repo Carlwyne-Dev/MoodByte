@@ -84,7 +84,7 @@ function App() {
       <SyncToast />
       <AchievementManager />
       <StreakCounter />
-      {isLoading && <LoadingScreen onComplete={() => {
+      {isLoading && <LoadingScreen bgImage={bgImage} onComplete={() => {
         sessionStorage.setItem('moodbyte_session_started', 'true');
         setIsLoading(false);
       }} />}

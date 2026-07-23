@@ -7,7 +7,7 @@ const BG_URLS = [
   '/bg/focus1.gif', '/bg/focus2.gif', '/bg/focus3.gif',
 ];
 
-export default function LoadingScreen({ onComplete }) {
+export default function LoadingScreen({ onComplete, bgImage }) {
   const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
@@ -26,17 +26,20 @@ export default function LoadingScreen({ onComplete }) {
       }
     };
 
-    // Preload all background GIFs silently in the background
+    // Only block the loading screen on the currently active background!
+    const activeImg = new Image();
+    activeImg.onload = activeImg.onerror = () => {
+      imagesDone = true;
+      tryComplete();
+    };
+    activeImg.src = bgImage || BG_URLS[0];
+
+    // Preload the rest silently in the background (does not block tryComplete)
     BG_URLS.forEach(url => {
-      const img = new Image();
-      img.onload = img.onerror = () => {
-        loaded++;
-        if (loaded === total) {
-          imagesDone = true;
-          tryComplete();
-        }
-      };
-      img.src = url;
+      if (url !== bgImage) {
+        const img = new Image();
+        img.src = url;
+      }
     });
 
     // Minimum 3s display time for the retro vibe
