@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Music2, Play, Pause, SkipForward } from 'lucide-react';
+import { Music2, Play, Pause, SkipForward, SkipBack } from 'lucide-react';
 
 const PILL_H = 46;
 const PEEK_H = 14; // px of top edge visible when hidden
@@ -99,6 +99,19 @@ export default function MobileFloatingPlayer() {
         </span>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+          <button
+            onClick={(e) => sendCmd('prev', e)}
+            style={{
+              background: 'none', border: 'none',
+              color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 30, height: 30, borderRadius: '50%',
+              WebkitTapHighlightColor: 'transparent', flexShrink: 0,
+              touchAction: 'manipulation',
+            }}
+          >
+            <SkipBack size={14} />
+          </button>
           <button
             onClick={(e) => sendCmd(isPlaying ? 'pause' : 'play', e)}
             style={{
