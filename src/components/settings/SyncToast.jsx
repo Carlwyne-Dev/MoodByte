@@ -4,17 +4,26 @@ import { Cloud, CheckCircle2 } from 'lucide-react';
 
 export default function SyncToast() {
   const [message, setMessage] = useState(null);
+  const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
     let queuedMsg = null;
     let timer = null;
+    let exitTimer = null;
 
     const displayMessage = (msg) => {
       setMessage(msg);
+      setIsExiting(false);
       if (timer) clearTimeout(timer);
+      if (exitTimer) clearTimeout(exitTimer);
+
       timer = setTimeout(() => {
-        setMessage(null);
-      }, 4000);
+        setIsExiting(true);
+        exitTimer = setTimeout(() => {
+          setMessage(null);
+          setIsExiting(false);
+        }, 300); // Wait for exit animation to finish
+      }, 3500); // Display for 3.5 seconds
     };
 
     const handleToast = (e) => {
@@ -40,13 +49,14 @@ export default function SyncToast() {
       window.removeEventListener('sync-toast', handleToast);
       window.removeEventListener('app-ready', handleAppReady);
       if (timer) clearTimeout(timer);
+      if (exitTimer) clearTimeout(exitTimer);
     };
   }, []);
 
-  if (!message) return null;
+  if (!message && !isExiting) return null;
 
   return createPortal(
-    <div className="sync-toast-container pop-in">
+    <div className={`sync-toast-container ${isExiting ? 'exiting' : ''}`}>
       <div className="sync-toast-content">
         <CheckCircle2 size={18} className="sync-toast-icon" />
         <span className="sync-toast-text">{message}</span>
@@ -59,7 +69,11 @@ export default function SyncToast() {
           left: 50%;
           transform: translateX(-50%);
           z-index: 9999;
-          animation: slideDownFadeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+          animation: slideDownFadeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .sync-toast-container.exiting {
+          animation: slideUpFadeOut 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
         
         .sync-toast-content {
@@ -94,6 +108,17 @@ export default function SyncToast() {
           to {
             opacity: 1;
             transform: translate(-50%, 0) scale(1);
+          }
+        }
+
+        @keyframes slideUpFadeOut {
+          from {
+            opacity: 1;
+            transform: translate(-50%, 0) scale(1);
+          }
+          to {
+            opacity: 0;
+            transform: translate(-50%, -20px) scale(0.9);
           }
         }
       `}</style>
