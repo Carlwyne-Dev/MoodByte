@@ -42,6 +42,11 @@ export function useCloudSync() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
       if (event === 'SIGNED_IN') {
+        // Clear the ugly OAuth hash from the URL if present
+        if (window.location.hash) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+        
         if (!sessionStorage.getItem('moodbyte_sync_toast_shown')) {
           sessionStorage.setItem('moodbyte_sync_toast_shown', 'true');
           window.dispatchEvent(new CustomEvent('sync-toast', { detail: 'Cloud Sync Activated!' }));
