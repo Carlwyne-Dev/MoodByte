@@ -1,8 +1,8 @@
 import React from 'react';
-import { Home, ClipboardList, Calendar, BookOpen, MoreHorizontal } from 'lucide-react';
+import { Moon, ClipboardList, Calendar, BookOpen, MoreHorizontal } from 'lucide-react';
 
 const TABS = [
-  { id: 'home',     Icon: Home,          label: 'Home' },
+  { id: 'themes',   Icon: Moon,           label: 'Themes' },
   { id: 'tasks',    Icon: ClipboardList,  label: 'Tasks' },
   { id: 'calendar', Icon: Calendar,       label: 'Calendar' },
   { id: 'study',    Icon: BookOpen,       label: 'Study' },
@@ -13,16 +13,14 @@ export default function MobileBottomNav({ activeTab, onTabChange }) {
   return (
     <nav className="mob-bottom-nav">
       {TABS.map(({ id, Icon, label }) => {
-        const isActive = activeTab === id;
         return (
           <button
             key={id}
-            className={`mob-tab-btn ${isActive ? 'active' : ''}`}
+            className="mob-tab-btn"
             onClick={() => onTabChange(id)}
           >
             <span className="mob-tab-icon">
-              <Icon size={20} strokeWidth={isActive ? 2.2 : 1.6} />
-              {isActive && <span className="mob-tab-pip" />}
+              <Icon size={20} strokeWidth={1.6} />
             </span>
             <span className="mob-tab-label">{label}</span>
           </button>
@@ -40,6 +38,7 @@ export default function MobileBottomNav({ activeTab, onTabChange }) {
           height: 60px;
           display: flex;
           align-items: stretch;
+          padding: 0 10px;
           background: rgba(10, 14, 30, 0.82);
           backdrop-filter: blur(28px);
           -webkit-backdrop-filter: blur(28px);
@@ -66,21 +65,11 @@ export default function MobileBottomNav({ activeTab, onTabChange }) {
           position: relative;
           min-height: 60px;
         }
-        .mob-tab-btn.active { color: var(--primary, #a855f7); }
         .mob-tab-icon {
           position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
-        }
-        .mob-tab-pip {
-          position: absolute;
-          bottom: -4px; left: 50%;
-          transform: translateX(-50%);
-          width: 4px; height: 4px;
-          background: var(--primary, #a855f7);
-          border-radius: 50%;
-          box-shadow: 0 0 6px var(--primary, #a855f7);
         }
         .mob-tab-label {
           font-family: 'Outfit', sans-serif;

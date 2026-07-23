@@ -12,6 +12,7 @@ import StudyDesk from '../study/StudyDesk';
 import BgmPlayer from '../bgm/BgmPlayer';
 import StatsModal from '../stats/StatsModal';
 import SettingsModal from '../settings/SettingsModal';
+import SyncModal from '../settings/SyncModal';
 import Player from '../music/Player';
 import Timer from '../pomodoro/Timer';
 import MoodSelector from '../mood/MoodSelector';
@@ -72,22 +73,48 @@ export default function MobileLayout() {
   const [activeTray, setActiveTray] = useState(null); // 'tasks' | 'calendar'
   const [activeSheet, setActiveSheet] = useState(null);
 
-  const handleTabChange = (tab) => {
-    setActiveSheet(null);
-    if (tab === 'study') {
+  const handleTabChange = (tabId) => {
+    // If we are clicking 'more', toggle it, but maybe close trays/sheets? 
+    // Usually more popup just overlays. We'll just toggle it.
+    if (tabId === 'more') {
+      setShowMorePopup(!showMorePopup);
+      return;
+    }
+    
+    // For any other tab, close the More popup
+    setShowMorePopup(false);
+    
+    // If the user clicks the currently active tab/tray/sheet, close it (toggle behavior)
+    if (tabId === 'study') {
       setShowStudy(true);
-      setShowMorePopup(false);
+      setActiveTab('study');
       setActiveTray(null);
-    } else if (tab === 'more') {
-      setShowMorePopup(prev => !prev);
-      setActiveTray(null);
-    } else if (tab === 'tasks' || tab === 'calendar') {
-      setActiveTray(prev => prev === tab ? null : tab);
-      setShowMorePopup(false);
+      setActiveSheet(null);
+      return;
+    }
+
+    if (tabId === 'themes') {
+      if (activeSheet === 'themes') {
+        setActiveSheet(null);
+      } else {
+        setActiveSheet('themes');
+        setActiveTray(null);
+      }
+      return;
+    }
+
+    if (tabId === 'tasks' || tabId === 'calendar') {
+      if (activeTray === tabId) {
+        setActiveTray(null); // toggle close
+      } else {
+        setActiveTab(tabId);
+        setActiveTray(tabId);
+        setActiveSheet(null); // Close any open sheets
+      }
     } else {
-      // home
+      setActiveTab(tabId);
       setActiveTray(null);
-      setShowMorePopup(false);
+      setActiveSheet(null);
     }
   };
 
@@ -155,6 +182,9 @@ export default function MobileLayout() {
       {activeSheet === 'settings' && (
         <SettingsModal onClose={() => setActiveSheet(null)} />
       )}
+      {activeSheet === 'sync' && (
+        <SyncModal onClose={() => setActiveSheet(null)} />
+      )}
       {activeSheet === 'themes' && (
         <>
           <div
@@ -164,7 +194,7 @@ export default function MobileLayout() {
           <div style={{
             position: 'fixed',
             bottom: 'calc(84px + env(safe-area-inset-bottom, 0px))',
-            left: '50%', transform: 'translateX(-50%)',
+            left: 16, right: 16, margin: '0 auto',
             width: 'calc(100% - 32px)', maxWidth: 380,
             background: 'rgba(10,14,30,0.94)',
             backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)',

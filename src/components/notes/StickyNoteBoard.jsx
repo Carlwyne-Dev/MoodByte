@@ -3,11 +3,13 @@ import { createPortal } from 'react-dom';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { 
   Plus, Maximize2, Trash2, Pin, PinOff, Palette, 
-  Type, Move, BarChart2, BookOpen, Settings as SettingsIcon, X, Calendar as CalendarIcon, StickyNote
+  Type, Move, BarChart2, BookOpen, Image as ImageIcon, X, Calendar as CalendarIcon, StickyNote, Cloud, CheckCircle2
 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import BgmPlayer from '../bgm/BgmPlayer';
 import StatsModal from '../stats/StatsModal';
 import SettingsModal from '../settings/SettingsModal';
+import SyncModal from '../settings/SyncModal';
 import StudyDesk from '../study/StudyDesk';
 import DailyQuoteWidget from './DailyQuoteWidget';
 import CalendarWidget from '../study/CalendarWidget';
@@ -64,9 +66,17 @@ export default function StickyNoteBoard() {
   const [closingPopup, setClosingPopup] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(false);
   const [showStudyDesk, setShowStudyDesk] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [user, setUser] = useState(null);
+
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user || null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user || null));
+    return () => subscription.unsubscribe();
+  }, []);
   
   // Animated close — plays popOut then clears
   const closePopup = React.useCallback(() => {
@@ -238,9 +248,19 @@ export default function StickyNoteBoard() {
       <div className="top-left-controls">
         <BgmPlayer />
         <div className="nav-separator" />
-        <button className="stats-btn" onClick={(e) => { e.stopPropagation(); setShowSettings(true); }} title="Settings">
-          <SettingsIcon size={18} />
-          <span className="stats-label">Settings</span>
+        <button 
+          className="stats-btn" 
+          onClick={(e) => { e.stopPropagation(); setShowSyncModal(true); }} 
+          title={user ? "Synced" : "Sync (Local Only)"}
+        >
+          {user ? <CheckCircle2 size={18} color="#22c55e" /> : <Cloud size={18} />}
+          <span className="stats-label" style={{ color: user ? '#22c55e' : 'inherit' }}>
+            {user ? 'Synced' : 'Sync'}
+          </span>
+        </button>
+        <button className="stats-btn" onClick={(e) => { e.stopPropagation(); setShowSettings(true); }} title="Custom Themes">
+          <ImageIcon size={18} />
+          <span className="stats-label">Themes</span>
         </button>
         <button className="stats-btn" onClick={(e) => { e.stopPropagation(); setShowStats(true); }} title="Your Stats">
           <BarChart2 size={18} />
@@ -258,6 +278,7 @@ export default function StickyNoteBoard() {
 
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showSyncModal && <SyncModal onClose={() => setShowSyncModal(false)} />}
       {showStudyDesk && <StudyDesk onClose={() => setShowStudyDesk(false)} />}
       {showCalendar && <CalendarWidget onClose={() => setShowCalendar(false)} />}
 

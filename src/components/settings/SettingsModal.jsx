@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { X, Settings as SettingsIcon, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { X, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { getImageBlob } from '../../hooks/useImageStorage';
 
@@ -53,8 +53,8 @@ export default function SettingsModal({ onClose }) {
       <div className="settings-modal pop-in" onClick={e => e.stopPropagation()}>
         <div className="settings-header">
           <div className="header-title">
-            <SettingsIcon size={24} className="header-icon" />
-            <h2>Settings</h2>
+            <ImageIcon size={24} className="header-icon" />
+            <h2>Custom Themes</h2>
           </div>
           <button className="settings-close-btn" onClick={onClose}><X size={20} /></button>
         </div>
