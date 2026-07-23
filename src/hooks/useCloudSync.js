@@ -42,11 +42,10 @@ export function useCloudSync() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
       if (event === 'SIGNED_IN') {
-        // If they just logged in via OAuth, the URL will have a hash with tokens.
-        // We use this to reliably show the toast once per login, preventing the "switch tab" bug.
-        if (window.location.hash && window.location.hash.includes('access_token')) {
+        // If they just logged in, this flag was set right before the redirect.
+        if (sessionStorage.getItem('moodbyte_expecting_login')) {
+          sessionStorage.removeItem('moodbyte_expecting_login');
           window.dispatchEvent(new CustomEvent('sync-toast', { detail: 'Cloud Sync Activated!' }));
-          window.history.replaceState(null, '', window.location.pathname);
         }
       }
     });

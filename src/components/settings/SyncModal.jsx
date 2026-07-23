@@ -19,6 +19,7 @@ export default function SyncModal({ onClose }) {
   }, []);
 
   const handleGoogleLogin = async () => {
+    sessionStorage.setItem('moodbyte_expecting_login', 'true');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
