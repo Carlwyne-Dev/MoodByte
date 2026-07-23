@@ -14,6 +14,7 @@ import StudyDesk from '../study/StudyDesk';
 import DailyQuoteWidget from './DailyQuoteWidget';
 import CalendarWidget from '../study/CalendarWidget';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import LiveClock from '../clock/LiveClock';
 
 const COLORS = [
   { name: 'Lemon',      value: '#fef08a' },
@@ -245,7 +246,8 @@ export default function StickyNoteBoard() {
 
   return (
     <div className="sticky-board" onClick={() => setActivePopup(null)}>
-      <div className="top-left-controls">
+      <div className="top-left-wrapper">
+        <div className="top-left-controls">
         <BgmPlayer />
         <div className="nav-separator" />
         <button 
@@ -272,6 +274,10 @@ export default function StickyNoteBoard() {
           <BookOpen size={18} />
           <span className="stats-label">Study Desk</span>
         </button>
+        </div>
+        <div className="live-clock-corner">
+          <LiveClock />
+        </div>
       </div>
 
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
@@ -282,7 +288,7 @@ export default function StickyNoteBoard() {
 
       {showDeleteConfirm && createPortal(
         <div className="custom-confirm-overlay" onClick={() => setShowDeleteConfirm(false)}>
-          <div className="custom-confirm-modal inner-glass" onClick={e => e.stopPropagation()}>
+          <div className="custom-confirm-modal" onClick={e => e.stopPropagation()}>
             <div className="confirm-icon-wrap"><Trash2 size={28} /></div>
             <h3>Clear All Notes?</h3>
             <p>Are you sure you want to delete all notes? This action cannot be undone.</p>
@@ -450,6 +456,7 @@ export default function StickyNoteBoard() {
           border-radius: 20px;
           display: flex; flex-direction: column; align-items: center; text-align: center;
           background: rgba(20, 25, 40, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           box-shadow: 0 20px 50px rgba(0,0,0,0.5);
           animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
@@ -492,9 +499,6 @@ export default function StickyNoteBoard() {
 
         
         .top-left-controls {
-          position: absolute;
-          top: 1.5rem;
-          left: 1.5rem;
           display: flex;
           align-items: center;
           gap: 0.2rem;
@@ -507,6 +511,23 @@ export default function StickyNoteBoard() {
           z-index: 50;
           pointer-events: auto;
           box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .top-left-wrapper {
+          position: absolute;
+          top: 1.5rem;
+          left: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+          z-index: 50;
+          pointer-events: auto;
+        }
+
+        .live-clock-corner {
+          pointer-events: none;
+          padding-left: 6px;
         }
 
         .nav-separator {
@@ -798,6 +819,9 @@ export default function StickyNoteBoard() {
             display: none !important;
           }
           .top-left-controls {
+            display: none !important;
+          }
+          .top-left-wrapper {
             display: none !important;
           }
           .note-header {
