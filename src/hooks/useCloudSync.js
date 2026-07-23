@@ -42,7 +42,10 @@ export function useCloudSync() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
       if (event === 'SIGNED_IN') {
-        window.dispatchEvent(new CustomEvent('sync-toast', { detail: 'Cloud Sync Activated!' }));
+        if (!sessionStorage.getItem('moodbyte_sync_toast_shown')) {
+          sessionStorage.setItem('moodbyte_sync_toast_shown', 'true');
+          window.dispatchEvent(new CustomEvent('sync-toast', { detail: 'Cloud Sync Activated!' }));
+        }
       }
     });
 
