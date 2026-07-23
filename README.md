@@ -102,35 +102,11 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
 |---|---|
 | Framework | React 18 + Vite |
 | Styling | Vanilla CSS (glassmorphism, CSS variables, keyframe animations) |
-| Persistence | localStorage + IndexedDB (via custom hooks) |
+| Persistence | localStorage + IndexedDB + Supabase
+Authentication | Supabase OAuth (Google) |
 | Icons | Lucide React |
 | Pet Physics | Custom `requestAnimationFrame` loop (60fps DOM animation) |
 | Audio | Web Audio API (`new Audio()`) |
-
----
-
-## Installation & Setup
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/Carlwyne-Dev/MoodByte.git
-   cd MoodByte
-   ```
-
-2. **Install dependencies:**
-
-   ```bash
-   npm install
-   ```
-
-3. **Run the development server:**
-
-   ```bash
-   npm run dev
-   ```
-
-4. Open your browser at `http://localhost:5173`.
 
 ---
 
