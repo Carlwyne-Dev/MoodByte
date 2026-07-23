@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { 
-  Plus, Maximize2, Trash2, Pin, PinOff, Palette, 
+  Plus, Maximize2, Trash2, Pin, PinOff, Palette, Settings as SettingsIcon,
   Type, Move, BarChart2, BookOpen, Image as ImageIcon, X, Calendar as CalendarIcon, StickyNote, Cloud, CheckCircle2
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -251,12 +251,10 @@ export default function StickyNoteBoard() {
         <button 
           className="stats-btn" 
           onClick={(e) => { e.stopPropagation(); setShowSyncModal(true); }} 
-          title={user ? "Synced" : "Sync (Local Only)"}
+          title="Settings"
         >
-          {user ? <CheckCircle2 size={18} color="#22c55e" /> : <Cloud size={18} />}
-          <span className="stats-label" style={{ color: user ? '#22c55e' : 'inherit' }}>
-            {user ? 'Synced' : 'Sync'}
-          </span>
+          <SettingsIcon size={18} />
+          <span className="stats-label">Settings</span>
         </button>
         <button className="stats-btn" onClick={(e) => { e.stopPropagation(); setShowSettings(true); }} title="Custom Themes">
           <ImageIcon size={18} />

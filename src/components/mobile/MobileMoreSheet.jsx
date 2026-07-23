@@ -6,6 +6,7 @@ import Timer from '../pomodoro/Timer';
 import MoodSelector from '../mood/MoodSelector';
 import StatsModal from '../stats/StatsModal';
 import SettingsModal from '../settings/SettingsModal';
+import SyncModal from '../settings/SyncModal';
 import MobileSheet from './MobileSheet';
 
 const THEMES = [
@@ -19,6 +20,7 @@ export default function MobileMoreSheet({ onClose }) {
   const { theme, changeTheme } = useTheme();
   const [showStats, setShowStats] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showThemes, setShowThemes] = useState(false);
   const [openSection, setOpenSection] = useState('themes'); // themes | music | pomodoro | mood
 
   const toggle = (s) => setOpenSection(prev => prev === s ? null : s);
@@ -31,6 +33,10 @@ export default function MobileMoreSheet({ onClose }) {
           <button className="mob-more-action-btn" onClick={() => setShowStats(true)}>
             <BarChart2 size={20} />
             <span>Stats</span>
+          </button>
+          <button className="mob-more-action-btn" onClick={() => setShowThemes(true)}>
+            <Info size={20} />
+            <span>Themes</span>
           </button>
           <button className="mob-more-action-btn" onClick={() => setShowSettings(true)}>
             <SettingsIcon size={20} />
@@ -101,16 +107,9 @@ export default function MobileMoreSheet({ onClose }) {
         </div>
       </div>
 
-      {showStats && (
-        <MobileSheet title="Your Stats" onClose={() => setShowStats(false)}>
-          <StatsModal onClose={() => setShowStats(false)} />
-        </MobileSheet>
-      )}
-      {showSettings && (
-        <MobileSheet title="Settings" onClose={() => setShowSettings(false)}>
-          <SettingsModal onClose={() => setShowSettings(false)} />
-        </MobileSheet>
-      )}
+      {showStats && <StatsModal onClose={() => setShowStats(false)} />}
+      {showThemes && <SettingsModal onClose={() => setShowThemes(false)} />}
+      {showSettings && <SyncModal onClose={() => setShowSettings(false)} />}
 
       <style>{`
         .mob-more-sheet {
