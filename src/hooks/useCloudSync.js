@@ -65,6 +65,8 @@ export function useCloudSync() {
     if (!user) return;
 
     const handleLocalChange = (e) => {
+      if (e.detail?.fromCloud) return; // Don't push to cloud if the change came from the cloud!
+
       if (e.detail && typeof e.detail.key === 'string' && (SYNC_KEYS.includes(e.detail.key) || e.detail.key.startsWith('moodbyte_'))) {
         // Debounce cloud push by 3 seconds
         if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
@@ -78,6 +80,42 @@ export function useCloudSync() {
 
     window.addEventListener('local-storage', handleLocalChange);
     return () => window.removeEventListener('local-storage', handleLocalChange);
+  }, [user]);
+
+  // 4. Listen for Real-time Cloud Updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('user-sync-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_sync_data', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const newData = payload.new?.data;
+          if (newData) {
+            Object.entries(newData).forEach(([key, value]) => {
+              if (SYNC_KEYS.includes(key) || key.startsWith('moodbyte_')) {
+                const localStr = window.localStorage.getItem(key);
+                const newStr = JSON.stringify(value);
+                // Only update and dispatch if there is an actual change
+                if (localStr !== newStr) {
+                  window.localStorage.setItem(key, newStr);
+                  window.dispatchEvent(new CustomEvent('local-storage', { detail: { key, value, fromCloud: true } }));
+                }
+              }
+            });
+            if (payload.new.updated_at) {
+              setLastSyncTime(new Date(payload.new.updated_at));
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const pullFromCloud = async () => {
@@ -101,7 +139,7 @@ export function useCloudSync() {
         Object.entries(cloudData).forEach(([key, value]) => {
           if (SYNC_KEYS.includes(key) || key.startsWith('moodbyte_')) {
             window.localStorage.setItem(key, JSON.stringify(value));
-            window.dispatchEvent(new CustomEvent('local-storage', { detail: { key, value } }));
+            window.dispatchEvent(new CustomEvent('local-storage', { detail: { key, value, fromCloud: true } }));
             appliedAny = true;
           }
         });
