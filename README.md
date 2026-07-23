@@ -9,8 +9,14 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
 ### Themes & Backgrounds
 - **4 Built-in Themes** — Switch instantly between Night, Rainy, Chill, and Focus environments, each with unique animated pixel-art backgrounds, color palettes, and ambient visual effects.
 - **Custom Backgrounds** — Upload your own background images (up to 3 per theme). Your custom wallpapers are persisted in IndexedDB so they survive browser restarts without re-uploading.
+- **Theme UI Preview** — A dedicated Themes modal shows a real-time glassmorphism preview of how your UI will look against your chosen background before applying it.
 - **Automatic Background Rotation** — MoodByte rotates through both default and your custom backgrounds automatically while keeping all defaults available.
 - **Mood-Based Theme Suggestions** — After logging your mood, MoodByte suggests a matching theme (e.g., "Rainy" for a bad mood) and lets you switch with one click.
+
+### Live Clock
+- **Real-Time Display** — A beautiful, highly aesthetic live clock sits on the top right of the main board.
+- **Animated Digits** — As time passes, the numbers feature a smooth, individual slide-up CSS animation, bringing life to the dashboard.
+- **Hover Reveal** — AM/PM indicators elegantly slide out on hover to keep the interface minimal by default.
 
 ### Mobile Experience
 - **Responsive Design** — Fully optimized for mobile with a custom bottom navigation bar and fluid app-like interactions.
@@ -76,12 +82,12 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
 - Hover to see your current streak count and a message about your progress.
 - A streak counts when you log a mood, complete a task, or archive a finished task in a given day.
 
-### Settings
-- Toggle and configure each section of the UI.
-- Custom background manager per theme (up to 3 slots each).
-- Full preview of your custom backgrounds before saving.
-- Pet panel (enable/disable, choose animal type, set name) — accessible via the pet icon in the Study Desk.
-- Pomodoro duration configuration.
+### Cloud Sync & Settings
+- **Cross-Platform Sync** — Log in with your Google account via Supabase OAuth to synchronize all your tasks, stats, and settings across your PC and mobile devices.
+- **Danger Zone** — A dedicated option inside the Settings modal to instantly and securely erase all your local and cloud data if needed.
+- **Dedicated Modals** — Settings and Appearance (Themes) are thoughtfully separated to give each the space they need without feeling cramped.
+- **Pomodoro Configuration** — Adjust your focus and break durations inside the main view.
+- **Pet Configuration** — Enable/disable, pick an animal, and rename your pet from the Study Desk settings.
 
 ### Onboarding
 - A welcome modal greets new users and walks them through MoodByte's features.
