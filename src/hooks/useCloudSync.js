@@ -2,15 +2,29 @@ import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 const SYNC_KEYS = [
-  'moodbyte_notes',
-  'moodbyte_tasks',
-  'moodbyte_stats',
-  'moodbyte_theme',
-  'moodbyte_custom_bgs',
-  'moodbyte_events',
-  'moodbyte_bgm_volume',
-  'moodbyte_has_seen_welcome',
-  'moodbyte_achievements'
+  'moodbyte_welcome_main',
+  'moodbyte_welcome_desk',
+  'moodbyte_dailyQuote',
+  'calendarNotes',
+  'tasks',
+  'taskHistory',
+  'moodHistory',
+  'stickyNotes',
+  'pomodoroStats',
+  'pomodoroCustom',
+  'unlockedAchievements',
+  'streakStats',
+  'zenStudyNotes',
+  'studyPetSettings',
+  'studyPetTreats',
+  'theme',
+  'customBgsV2',
+  'player_queue_meta',
+  'player_currentIdx',
+  'player_volume',
+  'player_shuffle',
+  'player_repeat',
+  'spotify_history'
 ];
 
 export function useCloudSync() {
@@ -25,8 +39,11 @@ export function useCloudSync() {
       setUser(session?.user || null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
+      if (event === 'SIGNED_IN') {
+        window.dispatchEvent(new CustomEvent('sync-toast', { detail: 'Cloud Sync Activated!' }));
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -44,7 +61,7 @@ export function useCloudSync() {
     if (!user) return;
 
     const handleLocalChange = (e) => {
-      if (e.detail && typeof e.detail.key === 'string' && e.detail.key.startsWith('moodbyte_')) {
+      if (e.detail && typeof e.detail.key === 'string' && (SYNC_KEYS.includes(e.detail.key) || e.detail.key.startsWith('moodbyte_'))) {
         // Debounce cloud push by 3 seconds
         if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
         
@@ -110,7 +127,7 @@ export function useCloudSync() {
       const localData = {};
       for (let i = 0; i < window.localStorage.length; i++) {
         const key = window.localStorage.key(i);
-        if (key.startsWith('moodbyte_')) {
+        if (SYNC_KEYS.includes(key) || key.startsWith('moodbyte_')) {
           try {
             localData[key] = JSON.parse(window.localStorage.getItem(key));
           } catch (e) {

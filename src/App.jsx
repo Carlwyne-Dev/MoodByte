@@ -12,6 +12,7 @@ import StreakCounter from './components/stats/StreakCounter';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useCloudSync } from './hooks/useCloudSync';
+import SyncToast from './components/settings/SyncToast';
 import MobileLayout from './components/mobile/MobileLayout';
 
 import { Moon, CloudRain, Wind, Zap, ChevronRight, ChevronLeft } from 'lucide-react';
@@ -69,10 +70,16 @@ function App() {
   const toggle = (key) => setMinimized(prev => ({ ...prev, [key]: !prev[key] }));
 
   // Render mobile layout on small screens
-  if (isMobile) return <MobileLayout />;
+  if (isMobile) return (
+    <>
+      <MobileLayout />
+      <SyncToast />
+    </>
+  );
 
   return (
     <div className="app-container" style={{ '--sidebar-offset': sidebarHidden ? '40px' : '360px' }}>
+      <SyncToast />
       <AchievementManager />
       <StreakCounter />
       {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
