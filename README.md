@@ -1,6 +1,20 @@
 # MoodByte
 
-MoodByte is a personal, highly aesthetic productivity web app designed to help you relax, focus, and get things done. It blends a cozy study environment with powerful tools, all wrapped in a beautifully customizable interface.
+MoodByte is a cozy digital workspace built for students, creators, and anyone who wants a calmer way to focus.
+
+Instead of feeling like another productivity app, MoodByte recreates the comfort of a personal study desk—complete with ambient radio, animated pixel-art themes, sticky notes, a virtual study companion, and distraction-free focus tools.
+
+Everything is designed around one goal:
+
+**Make productivity feel peaceful, not stressful.**
+
+---
+**What makes MoodByte different?**
+🌙 Cozy pixel-art environments with animated themes
+📻 Live ambient FM radio inspired by classic radio tuning
+📝 A study desk where notes, tasks, and calendar sync together
+🐱 A virtual companion that grows alongside your focus sessions
+⏱️ Built around relaxation first, productivity second
 
 ---
 
@@ -51,11 +65,13 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
 - **Spotify Integration** — Paste a Spotify playlist/album link and open it directly.
 - Playback controls: play, pause, previous, next, and track progress display.
 
-### Live Radio / BGM
+### FM Radio
 
-- **Ambient Radio Streams** — A curated selection of lo-fi, jazz, and chillhop internet radio stations stream directly inside the app.
-- **One-Tap Listening** — Tap any station to start streaming instantly, no sign-up required.
-- **Background Playback** — Radio continues playing while you use other parts of the app.
+Turn the dial and tune into curated 24/7 ambient stations inspired by classic FM radios. Switch between lo-fi, jazz, chillhop, and relaxing background streams without ever leaving your study space.
+
+- Multiple always-on radio stations
+- Smooth radio-style tuning experience
+- Designed to make MoodByte feel like a living room, not just a web app
 
 ### Mood Tracker
 
