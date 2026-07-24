@@ -57,6 +57,8 @@ export default function LiveRadio() {
           onStateChange: (event) => {
             if (event.data === window.YT.PlayerState.PLAYING) {
               setIsPlaying(true);
+              // Tell other audio sources to stop
+              window.dispatchEvent(new Event('radio-play'));
               tuningAudioRefs.current.forEach(audio => {
                 if (audio) {
                   audio.pause();
@@ -78,6 +80,21 @@ export default function LiveRadio() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Stop radio when music player or ambient BGM starts
+  useEffect(() => {
+    const stopRadio = () => {
+      if (player && isPlaying) {
+        player.pauseVideo();
+      }
+    };
+    window.addEventListener('music-play', stopRadio);
+    window.addEventListener('bgm-play', stopRadio);
+    return () => {
+      window.removeEventListener('music-play', stopRadio);
+      window.removeEventListener('bgm-play', stopRadio);
+    };
+  }, [player, isPlaying]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -114,6 +131,8 @@ export default function LiveRadio() {
       player.pauseVideo();
     } else {
       player.playVideo();
+      // Tell other audio sources to stop
+      window.dispatchEvent(new Event('radio-play'));
     }
   };
 

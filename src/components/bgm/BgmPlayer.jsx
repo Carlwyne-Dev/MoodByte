@@ -36,7 +36,11 @@ export default function BgmPlayer() {
   useEffect(() => {
     const handleMusicPlay = () => setIsMuted(true);
     window.addEventListener('music-play', handleMusicPlay);
-    return () => window.removeEventListener('music-play', handleMusicPlay);
+    window.addEventListener('radio-play', handleMusicPlay);
+    return () => {
+      window.removeEventListener('music-play', handleMusicPlay);
+      window.removeEventListener('radio-play', handleMusicPlay);
+    };
   }, []);
 
   return (

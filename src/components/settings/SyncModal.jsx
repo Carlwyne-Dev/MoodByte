@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Cloud, CheckCircle2, Settings as SettingsIcon, AlertTriangle, Trash2 } from 'lucide-react';
+import { X, Cloud, CheckCircle2, Settings as SettingsIcon, AlertTriangle, Trash2, LayoutTemplate } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
 
 export default function SyncModal({ onClose }) {
   const [user, setUser] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showNavRail, setShowNavRail] = useLocalStorage('moodbyte_show_nav_rail', true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -94,6 +96,21 @@ export default function SyncModal({ onClose }) {
             </div>
           </div>
 
+          <div className="settings-section" style={{ marginTop: '24px' }}>
+            <h3 className="section-title">
+              <LayoutTemplate size={18} /> Interface Preferences
+            </h3>
+            <div className="setting-toggle-row" onClick={() => setShowNavRail(!showNavRail)}>
+              <div className="setting-info">
+                <h4>Sidebar Quick-Nav Rail</h4>
+                <span>Show the floating quick-navigation icons on the left edge of the sidebar</span>
+              </div>
+              <div className={`custom-toggle ${showNavRail ? 'active' : ''}`}>
+                <div className="toggle-thumb" />
+              </div>
+            </div>
+          </div>
+
           <div className="settings-section danger-zone" style={{ marginTop: '24px' }}>
             <h3 className="section-title text-red">
               <AlertTriangle size={18} /> Danger Zone
@@ -139,6 +156,7 @@ export default function SyncModal({ onClose }) {
           border-radius: 20px;
           width: 500px;
           max-width: 90vw;
+          max-height: 85vh;
           box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
           display: flex; flex-direction: column;
           overflow: hidden;
@@ -162,12 +180,32 @@ export default function SyncModal({ onClose }) {
           background: none; border: none; color: #94a3b8; cursor: pointer;
           border-radius: 8px; padding: 6px; transition: all 0.2s;
         }
-        .settings-close-btn:hover {
-          color: #ef4444; background: rgba(239, 68, 68, 0.1);
+        
+        .setting-toggle-row {
+          display: flex; justify-content: space-between; align-items: center;
+          background: rgba(255,255,255,0.03); padding: 16px 20px; border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.05); cursor: pointer;
+          transition: all 0.2s ease;
         }
+        .setting-toggle-row:hover { background: rgba(255,255,255,0.06); }
+        .setting-info h4 { margin: 0; color: #fff; font-size: 1rem; font-weight: 500; font-family: 'Outfit', sans-serif; }
+        .setting-info span { font-size: 0.85rem; color: #94a3b8; display: block; margin-top: 4px; }
+        .custom-toggle {
+          width: 44px; height: 24px; min-width: 44px; flex-shrink: 0;
+          background: rgba(255,255,255,0.1); border-radius: 12px;
+          position: relative; transition: all 0.3s;
+        }
+        .custom-toggle.active { background: #8b5cf6; }
+        .toggle-thumb {
+          width: 20px; height: 20px; background: #fff; border-radius: 50%;
+          position: absolute; top: 2px; left: 2px; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .custom-toggle.active .toggle-thumb { transform: translateX(20px); }
 
         .settings-content {
           padding: 24px;
+          overflow-y: auto;
         }
         .settings-section {
           background: rgba(255,255,255,0.02);

@@ -41,6 +41,12 @@ Everything is designed around one goal:
 - **Floating Music Pill** — On mobile, the music player minimizes into an elegant, auto-hiding pill that floats above the bottom nav.
 - **App-like Sheets** — Mobile views use smooth slide-up sheets and trays instead of modal popups for a native feel.
 
+### Navigation
+
+- **Sidebar Quick-Nav Rail** — A sleek, vertical icon rail attached to the left edge of the sidebar. It provides instantly accessible anchor links to all major tools (Themes, Music, Pomodoro, Tasks, Mood).
+- **Smart Active States** — Icons intelligently split into "above" and "below" groups based on your current scroll position, keeping the UI intuitive and out of your way.
+- **Toggleable** — Don't like it? You can easily turn it off in the Interface Preferences inside the Settings modal.
+
 ### Study Desk
 
 - **Full Zen Mode** — A distraction-free, full-screen study environment with its own ambient background.

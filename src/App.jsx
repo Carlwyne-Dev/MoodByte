@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from './context/ThemeContext';
 import MoodSelector from './components/mood/MoodSelector';
 import TaskList from './components/tasks/TaskList';
@@ -16,7 +16,7 @@ import { useCloudSync } from './hooks/useCloudSync';
 import SyncToast from './components/settings/SyncToast';
 import MobileLayout from './components/mobile/MobileLayout';
 
-import { Moon, CloudRain, Wind, Zap, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Moon, CloudRain, Wind, Zap, ChevronRight, ChevronLeft, Palette, Music2, Timer as TimerIcon, CheckSquare, Smile } from 'lucide-react';
 
 const THEMES = [
   { id: 'night',      label: 'Night',      Icon: Moon,      color: '#a855f7' }, // Purple
@@ -70,6 +70,45 @@ function App() {
   const [hasSeenAppWelcome, setHasSeenAppWelcome] = useLocalStorage('moodbyte_welcome_main', false);
   const [showAbout, setShowAbout] = React.useState(false);
   const [showWhatsNew, setShowWhatsNew] = React.useState(false);
+  const [showNavRail] = useLocalStorage('moodbyte_show_nav_rail', true);
+  const sidebarScrollRef = useRef(null);
+  const [activeSection, setActiveSection] = React.useState('themes');
+
+  const SECTIONS = [
+    { id: 'themes',   Icon: Palette,     label: 'Themes'   },
+    { id: 'music',    Icon: Music2,      label: 'Music'    },
+    { id: 'pomodoro', Icon: TimerIcon,   label: 'Pomodoro' },
+    { id: 'tasks',    Icon: CheckSquare, label: 'Tasks'    },
+    { id: 'mood',     Icon: Smile,       label: 'Mood'     },
+  ];
+
+  const scrollToSection = (id) => {
+    const el = document.getElementById('sec-' + id);
+    const container = sidebarScrollRef.current;
+    if (!el || !container) return;
+    const elTop = el.offsetTop;
+    container.scrollTo({ top: elTop - 24, behavior: 'smooth' });
+  };
+
+  // Track which section is currently closest to top
+  useEffect(() => {
+    const container = sidebarScrollRef.current;
+    if (!container) return;
+    const onScroll = () => {
+      let closest = SECTIONS[0].id;
+      let minDist = Infinity;
+      SECTIONS.forEach(({ id }) => {
+        const el = document.getElementById('sec-' + id);
+        if (!el) return;
+        const dist = Math.abs(el.offsetTop - container.scrollTop - 24);
+        if (dist < minDist) { minDist = dist; closest = id; }
+      });
+      setActiveSection(closest);
+    };
+    container.addEventListener('scroll', onScroll);
+    return () => container.removeEventListener('scroll', onScroll);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Intercept browser back button — push a dummy state on mount,
   // then re-push whenever popstate fires so the back button never leaves the page.
@@ -129,10 +168,35 @@ function App() {
           {sidebarHidden ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
         </button>
 
-        <div className="sidebar-content">
+        {/* Section Quick-Nav Rail */}
+        {showNavRail && (() => {
+          const activeIdx = SECTIONS.findIndex(s => s.id === activeSection);
+          const aboveSections = SECTIONS.slice(0, activeIdx);
+          const belowSections = SECTIONS.slice(activeIdx + 1);
+          return (
+            <div className="section-nav-rail">
+              <div className="snr-group">
+                {aboveSections.map(({ id, Icon, label }) => (
+                  <button key={id} className="snr-btn snr-above" onClick={() => scrollToSection(id)} title={label}>
+                    <Icon size={14} strokeWidth={1.8} />
+                  </button>
+                ))}
+              </div>
+              <div className="snr-group">
+                {belowSections.map(({ id, Icon, label }) => (
+                  <button key={id} className="snr-btn snr-below" onClick={() => scrollToSection(id)} title={label}>
+                    <Icon size={14} strokeWidth={1.8} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
+        <div className="sidebar-content" ref={sidebarScrollRef}>
           
           {/* Themes Section */}
-          <div className="tool-section">
+          <div className="tool-section" id="sec-themes">
             <div className="section-header" onClick={() => toggle('themes')}>
               <h3 className="font-pixel">Themes</h3>
               <span className="minimize-icon">{minimized.themes ? '+' : '−'}</span>
@@ -156,7 +220,7 @@ function App() {
           </div>
 
           {/* Music Section */}
-          <div className="tool-section">
+          <div className="tool-section" id="sec-music">
             <div className="section-header" onClick={() => toggle('music')}>
               <h3 className="font-pixel">Music</h3>
               <span className="minimize-icon">{minimized.music ? '+' : '−'}</span>
@@ -167,7 +231,7 @@ function App() {
           </div>
 
           {/* Pomodoro Section */}
-          <div className="tool-section">
+          <div className="tool-section" id="sec-pomodoro">
             <div className="section-header" onClick={() => toggle('pomodoro')}>
               <h3 className="font-pixel">Pomodoro</h3>
               <span className="minimize-icon">{minimized.pomodoro ? '+' : '−'}</span>
@@ -180,7 +244,7 @@ function App() {
           </div>
 
           {/* Tasks Section */}
-          <div className="tool-section">
+          <div className="tool-section" id="sec-tasks">
             <div className="section-header" onClick={() => toggle('tasks')}>
               <h3 className="font-pixel">Tasks</h3>
               <span className="minimize-icon">{minimized.tasks ? '+' : '−'}</span>
@@ -193,7 +257,7 @@ function App() {
           </div>
 
           {/* Mood Section */}
-          <div className="tool-section">
+          <div className="tool-section" id="sec-mood">
             <div className="section-header" onClick={() => toggle('mood')}>
               <h3 className="font-pixel">Mood</h3>
               <span className="minimize-icon">{minimized.mood ? '+' : '−'}</span>
@@ -331,6 +395,64 @@ function App() {
           color: var(--text-color);
           background: rgba(255,255,255,0.1);
           transform: scale(1.1);
+        }
+
+        /* ── Section Quick-Nav Rail ─────────────────────────────────────── */
+        .section-nav-rail {
+          position: absolute;
+          left: -34px;
+          top: 4.5rem;
+          bottom: 2.5rem;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          z-index: 105;
+          align-items: center;
+        }
+
+        .snr-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          align-items: center;
+        }
+
+        @keyframes popInRail {
+          0% { transform: scale(0.5) translateY(10px); opacity: 0; }
+          100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .snr-btn {
+          width: 26px;
+          height: 26px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.65);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: rgba(255, 255, 255, 0.65);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s, background 0.2s;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(8px);
+          transform: scale(1);
+          opacity: 1;
+          animation: popInRail 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .snr-btn.snr-above:hover, .snr-btn.snr-below:hover {
+          color: #fff;
+          transform: scale(1.15);
+        }
+        
+        .snr-btn.snr-above:active, .snr-btn.snr-below:active {
+          transform: scale(0.9);
+        }
+
+        .sidebar.hidden .section-nav-rail {
+          opacity: 0;
+          pointer-events: none;
         }
 
         .sidebar-content {
