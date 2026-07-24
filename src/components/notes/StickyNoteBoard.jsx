@@ -75,6 +75,7 @@ export default function StickyNoteBoard() {
   const [showStudyDesk, setShowStudyDesk] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleteConfirmClosing, setIsDeleteConfirmClosing] = useState(false);
   const [closingNotes, setClosingNotes] = useState([]);
   const [user, setUser] = useState(null);
 
@@ -172,10 +173,24 @@ export default function StickyNoteBoard() {
     }
   };
 
+  const closeDeleteConfirm = () => {
+    setIsDeleteConfirmClosing(true);
+    setTimeout(() => {
+      setShowDeleteConfirm(false);
+      setIsDeleteConfirmClosing(false);
+    }, 200);
+  };
+
   const confirmDeleteAll = () => {
-    setNotes([]);
-    posRef.current = {};
-    setShowDeleteConfirm(false);
+    setIsDeleteConfirmClosing(true);
+    setClosingNotes(notes.map(n => n.id)); // animate all notes out
+    setTimeout(() => {
+      setNotes([]);
+      posRef.current = {};
+      setShowDeleteConfirm(false);
+      setIsDeleteConfirmClosing(false);
+      setClosingNotes([]); // reset closing notes
+    }, 200);
   };
 
   const bringToFront = (id) => {
@@ -310,13 +325,13 @@ export default function StickyNoteBoard() {
       {showCalendar && <CalendarWidget onClose={() => setShowCalendar(false)} />}
 
       {showDeleteConfirm && createPortal(
-        <div className="custom-confirm-overlay" onClick={() => setShowDeleteConfirm(false)}>
-          <div className="custom-confirm-modal" onClick={e => e.stopPropagation()}>
+        <div className={`custom-confirm-overlay ${isDeleteConfirmClosing ? 'ui-overlay-exit' : 'ui-overlay-enter'}`} onClick={closeDeleteConfirm}>
+          <div className={`custom-confirm-modal ${isDeleteConfirmClosing ? 'ui-modal-exit' : 'ui-modal-enter'}`} onClick={e => e.stopPropagation()}>
             <div className="confirm-icon-wrap"><Trash2 size={28} /></div>
             <h3>Clear All Notes?</h3>
             <p>Are you sure you want to delete all notes? This action cannot be undone.</p>
             <div className="confirm-actions">
-              <button className="confirm-cancel" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+              <button className="confirm-cancel" onClick={closeDeleteConfirm}>Cancel</button>
               <button className="confirm-danger" onClick={confirmDeleteAll}>Yes, Delete All</button>
             </div>
           </div>
@@ -503,7 +518,6 @@ export default function StickyNoteBoard() {
           -webkit-backdrop-filter: blur(4px);
           display: flex; align-items: center; justify-content: center;
           z-index: 10000;
-          animation: fadeIn 0.2s ease;
         }
         .custom-confirm-modal {
           width: 90%; max-width: 320px;
@@ -513,7 +527,6 @@ export default function StickyNoteBoard() {
           background: rgba(20, 25, 40, 0.85);
           border: 1px solid rgba(255, 255, 255, 0.1);
           box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-          animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .confirm-icon-wrap {
           width: 56px; height: 56px;
