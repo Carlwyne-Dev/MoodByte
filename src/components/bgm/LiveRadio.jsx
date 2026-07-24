@@ -56,6 +56,7 @@ export default function LiveRadio() {
           },
           onStateChange: (event) => {
             if (event.data === window.YT.PlayerState.PLAYING) {
+              if (window.stopLocalMusic) window.stopLocalMusic();
               setIsPlaying(true);
               // Tell other audio sources to stop
               window.dispatchEvent(new Event('radio-play'));
@@ -124,12 +125,19 @@ export default function LiveRadio() {
     };
   }, [showDropdown, isPlaying]);
 
+  // Global pause hook to guarantee it shuts off
+  window.stopLiveRadio = () => {
+    if (player && isPlaying) player.pauseVideo();
+    setIsPlaying(false);
+  };
+
   const togglePlay = (e) => {
     e.stopPropagation();
     if (!player || !isReady) return;
     if (isPlaying) {
       player.pauseVideo();
     } else {
+      if (window.stopLocalMusic) window.stopLocalMusic();
       player.playVideo();
       // Tell other audio sources to stop
       window.dispatchEvent(new Event('radio-play'));
@@ -175,8 +183,10 @@ export default function LiveRadio() {
     const newIndex = parseInt(e.target.value, 10);
     const channel = RADIO_CHANNELS[newIndex];
     if (channel && player && isReady) {
+      if (window.stopLocalMusic) window.stopLocalMusic();
       setIsPlaying(true); 
       player.loadVideoById(channel.videoId);
+      window.dispatchEvent(new Event('radio-play'));
     }
     
     // We shouldn't need to manually pause here since autoplay is forced and onStateChange will pause it.

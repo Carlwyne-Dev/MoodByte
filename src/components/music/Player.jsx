@@ -137,22 +137,39 @@ export default function Player({ isMobile = false }) {
     }
   }, [volume, isMuted]);
   // ── Controls ──────────────────────────────────────────────────────────────────
+  // Global pause hook to guarantee it works even across react states
+  window.stopLocalMusic = () => {
+    if (audioRef.current) audioRef.current.pause();
+    setIsPlaying(false);
+    shouldPlayRef.current = false;
+    // Force Spotify pause too
+    setSpotifyEmbed(prev => {
+      if (prev) {
+        setTimeout(() => setSpotifyEmbed({ ...prev }), 50);
+        return null;
+      }
+      return prev;
+    });
+  };
+
   const togglePlay = () => {
     if (!audioRef.current || !currentTrack) return;
     if (isPlaying) {
       audioRef.current.pause();
     } else {
+      if (window.stopLiveRadio) window.stopLiveRadio();
       audioRef.current.play().catch(() => {});
       window.dispatchEvent(new Event('music-play'));
     }
   };
 
   useEffect(() => {
-    const handleBgmPlay = () => {
-      if (audioRef.current && !audioRef.current.paused) {
+    const handleOtherPlay = () => {
+      if (audioRef.current) {
         audioRef.current.pause();
-        setIsPlaying(false);
       }
+      setIsPlaying(false);
+      shouldPlayRef.current = false;
       // If Spotify is active, force it to pause by briefly reloading the iframe
       setSpotifyEmbed(prev => {
         if (prev) {
@@ -163,8 +180,12 @@ export default function Player({ isMobile = false }) {
         return prev;
       });
     };
-    window.addEventListener('bgm-play', handleBgmPlay);
-    return () => window.removeEventListener('bgm-play', handleBgmPlay);
+    window.addEventListener('bgm-play', handleOtherPlay);
+    window.addEventListener('radio-play', handleOtherPlay);
+    return () => {
+      window.removeEventListener('bgm-play', handleOtherPlay);
+      window.removeEventListener('radio-play', handleOtherPlay);
+    };
   }, []);
 
   // Detect clicks on the Spotify iframe to mute BGM
@@ -367,6 +388,8 @@ export default function Player({ isMobile = false }) {
       
       setSpotifyEmbed({ type, id });
       setSpotifyUrl('');
+      if (window.stopLiveRadio) window.stopLiveRadio();
+      window.dispatchEvent(new Event('music-play'));
       
       // Save to history (max 5)
       setSpotifyHistory(prev => {
@@ -1088,7 +1111,7 @@ export default function Player({ isMobile = false }) {
           cursor: not-allowed;
         }
         .ctrl:not(:disabled):hover {
-          color: #fff;
+          filter: brightness(1.3);
           transform: scale(1.1);
         }
         .ctrl.active {
