@@ -11,4 +11,12 @@ export const RADIO_CHANNELS = [
   { id: 'sleep-hiphop', label: 'Lofi Hip Hop to Sleep', videoId: 'JD-kMIpDfnY' },
   { id: 'relaxing-piano', label: 'Relaxing Piano Radio', videoId: 'N0snMcR6aaA' },
   { id: 'relaxing-jazz', label: 'Relaxing Jazz Music', videoId: 'A8jDx9TLMQc' },
+  { id: 'study-with-me', label: 'Study with Me Pomodoro', videoId: 'qGohtGC5Rtk' },
+  { id: 'christmas-lofi', label: 'Christmas Lofi Music', videoId: 'XSXEaikz0Bc' },
+  { id: 'halloween-lofi', label: 'Halloween Lofi Radio', videoId: '3GQY80jyysQ' },
+  { id: 'fireplace-ambience', label: 'Fireplace Ambience', videoId: 'q_4KI-ChIIs' },
+  { id: 'chill-guitar', label: 'Chill Guitar Radio', videoId: 'E_XmwjgRLz8' },
+  { id: 'medieval-lofi', label: 'Medieval Lofi Radio', videoId: 'IxPANmjPaek' },
+  { id: 'gentle-rain', label: 'Gentle Rain Ambience', videoId: '-OekvEFm1lo' },
+  { id: 'dark-ambient', label: 'Dark Ambient Music', videoId: 'S_MOd40zlYU' },
 ];
