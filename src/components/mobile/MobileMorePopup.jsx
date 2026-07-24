@@ -1,10 +1,10 @@
 import React from 'react';
-import { BarChart2, Image as ImageIcon, Moon, Music, Timer, Smile, Cloud } from 'lucide-react';
+import { BarChart2, Image as ImageIcon, Moon, Music, Timer, Smile, Settings } from 'lucide-react';
 
 const ITEMS = [
   { id: 'stats',     Icon: BarChart2, label: 'Stats' },
   { id: 'settings',  Icon: ImageIcon, label: 'Wallpapers' },
-  { id: 'sync',      Icon: Cloud,     label: 'Sync' },
+  { id: 'sync',      Icon: Settings,  label: 'Settings' },
   { id: 'music',     Icon: Music,     label: 'Music' },
   { id: 'pomodoro',  Icon: Timer,     label: 'Pomodoro' },
   { id: 'mood',      Icon: Smile,     label: 'Mood' },

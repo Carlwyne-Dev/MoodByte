@@ -3,8 +3,10 @@ import { createPortal } from 'react-dom';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { Check, Trash2, ClipboardList, Sparkles, History, X, Plus, Calendar as CalendarIcon, StickyNote } from 'lucide-react';
 import TaskDatePicker from './TaskDatePicker';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 export default function TaskList() {
+  const isMobile = useIsMobile();
   const [tasks, setTasks] = useLocalStorage('tasks', []);
   const [taskHistory, setTaskHistory] = useLocalStorage('taskHistory', []);
   const [newTaskText, setNewTaskText] = useState('');
@@ -229,7 +231,7 @@ export default function TaskList() {
           className="task-input"
         />
         <div className="input-actions" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-          {pendingDate && (
+          {!isMobile && pendingDate && (
             <span className="task-date-chip">
               {new Date(pendingDate + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
               <button type="button" className="task-date-chip-clear" onClick={() => setPendingDate(null)}>
@@ -237,7 +239,7 @@ export default function TaskList() {
               </button>
             </span>
           )}
-          {newTaskText.trim() && (
+          {!isMobile && newTaskText.trim() && (
             <button
               ref={calBtnRef}
               type="button"

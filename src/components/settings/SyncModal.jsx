@@ -72,12 +72,14 @@ export default function SyncModal({ onClose }) {
               Your data is currently saved only on this device. Sign in with Google to enable cross-platform sync across your phone and PC.
             </p>
             <div className="sync-card">
-              <div className="sync-status">
-                {user ? (
-                  <CheckCircle2 size={24} className="sync-icon synced" />
-                ) : (
-                  <Cloud size={24} className="sync-icon un-synced" />
-                )}
+              <div className="sync-status-row">
+                <div className="sync-status">
+                  {user ? (
+                    <CheckCircle2 size={24} className="sync-icon synced" />
+                  ) : (
+                    <Cloud size={24} className="sync-icon un-synced" />
+                  )}
+                </div>
                 <div className="sync-info">
                   {user ? (
                     <>
@@ -237,20 +239,35 @@ export default function SyncModal({ onClose }) {
         }
         .sync-icon.un-synced { color: #64748b; }
         .sync-icon.synced { color: #22c55e; }
+        .sync-card {
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 12px;
+          padding: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .sync-status-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .sync-info { flex: 1; min-width: 0; }
         .sync-info h4 { margin: 0 0 4px 0; color: #e2e8f0; font-size: 0.95rem; }
-        .sync-info span { color: #94a3b8; font-size: 0.8rem; }
+        .sync-info span { color: #94a3b8; font-size: 0.8rem; word-break: break-all; }
         
         .google-login-btn {
           background: #fff; color: #0f172a; border: none;
-          padding: 8px 16px; border-radius: 8px; font-weight: 600; font-family: 'Outfit', sans-serif;
-          cursor: pointer; transition: all 0.2s;
+          padding: 10px 16px; border-radius: 8px; font-weight: 600; font-family: 'Outfit', sans-serif;
+          cursor: pointer; transition: all 0.2s; width: 100%;
         }
         .google-login-btn:hover { background: #e2e8f0; }
         
         .google-logout-btn {
           background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);
-          padding: 8px 16px; border-radius: 8px; font-weight: 600; font-family: 'Outfit', sans-serif;
-          cursor: pointer; transition: all 0.2s;
+          padding: 10px 16px; border-radius: 8px; font-weight: 600; font-family: 'Outfit', sans-serif;
+          cursor: pointer; transition: all 0.2s; width: 100%;
         }
         .google-logout-btn:hover { background: rgba(239,68,68,0.2); }
 
