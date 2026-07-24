@@ -10,11 +10,11 @@ Everything is designed around one goal:
 
 ---
 **What makes MoodByte different?**
---Cozy pixel-art environments with animated themes
---Live ambient FM radio inspired by classic radio tuning
---A study desk where notes, tasks, and calendar sync together
---A virtual companion that grows alongside your focus sessions
---Built around relaxation first, productivity second
+- Cozy pixel-art environments with animated themes
+- Live ambient FM radio inspired by classic radio tuning
+- A study desk where notes, tasks, and calendar sync together
+- A virtual companion that grows alongside your focus sessions
+- Built around relaxation first, productivity second
 
 ---
 
