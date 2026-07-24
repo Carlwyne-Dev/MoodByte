@@ -18,7 +18,7 @@ import { useCloudSync } from './hooks/useCloudSync';
 import SyncToast from './components/settings/SyncToast';
 import MobileLayout from './components/mobile/MobileLayout';
 
-import { Moon, CloudRain, Wind, Zap, ChevronRight, ChevronLeft, Palette, Music2, Timer as TimerIcon, CheckSquare, Smile } from 'lucide-react';
+import { Moon, CloudRain, Wind, Zap, ChevronRight, ChevronLeft, Palette, Music2, Timer as TimerIcon, CheckSquare, Smile, Loader2 } from 'lucide-react';
 
 const THEMES = [
   { id: 'night',      label: 'Night',      Icon: Moon,      color: '#a855f7' }, // Purple
@@ -28,24 +28,41 @@ const THEMES = [
 ];
 
 function BackgroundManager({ bgImage }) {
-  const [layers, setLayers] = React.useState([{ id: Date.now(), src: bgImage }]);
+  const [layers, setLayers] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
-    // When bgImage changes, add it as a new layer
-    setLayers(prev => {
-      if (prev[prev.length - 1].src === bgImage) return prev;
-      return [...prev, { id: Date.now(), src: bgImage }];
-    });
+    let isCancelled = false;
+    setIsLoading(true);
 
-    // Cleanup old layers after transition (1.5s)
-    const timer = setTimeout(() => {
-      setLayers(prev => prev.slice(-1));
-    }, 1500);
-    return () => clearTimeout(timer);
+    const img = new Image();
+    img.onload = () => {
+      if (isCancelled) return;
+      setIsLoading(false);
+      
+      setLayers(prev => {
+        if (prev.length > 0 && prev[prev.length - 1].src === bgImage) return prev;
+        return [...prev, { id: Date.now(), src: bgImage }];
+      });
+
+      // Cleanup old layers after transition (1.5s)
+      setTimeout(() => {
+        if (!isCancelled) {
+          setLayers(prev => prev.slice(-1));
+        }
+      }, 1500);
+    };
+    img.src = bgImage;
+
+    return () => { isCancelled = true; };
   }, [bgImage]);
 
   return (
     <div className="bg-manager">
+      {layers.length === 0 && (
+        <div className="bg-skeleton-pulse" />
+      )}
+      
       {layers.map((layer, i) => (
         <div
           key={layer.id}
@@ -56,6 +73,13 @@ function BackgroundManager({ bgImage }) {
           }}
         />
       ))}
+
+      {layers.length > 0 && isLoading && (
+        <div className="bg-loading-indicator fade-in">
+          <Loader2 size={16} className="spin-slow" />
+          <span>Loading Theme...</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -69,6 +93,24 @@ function App() {
   const [isLoading, setIsLoading] = React.useState(() => {
     return !sessionStorage.getItem('moodbyte_session_started');
   });
+
+  // Silent Cache Preloader
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      const defaultBgs = [
+        '/bg/night1.gif', '/bg/night2.gif', '/bg/night3.gif',
+        '/bg/rain1.gif', '/bg/rain2.gif', '/bg/rain3.gif',
+        '/bg/chill1.gif', '/bg/chill2.gif', '/bg/chill3.gif',
+        '/bg/focus1.gif', '/bg/focus2.gif', '/bg/focus3.gif',
+      ];
+      defaultBgs.forEach(src => {
+        const img = new Image();
+        img.src = src;
+      });
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const [hasSeenAppWelcome, setHasSeenAppWelcome] = useLocalStorage('moodbyte_welcome_main', false);
   const [showAbout, setShowAbout] = React.useState(false);
   const [showWhatsNew, setShowWhatsNew] = React.useState(false);

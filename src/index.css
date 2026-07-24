@@ -77,6 +77,64 @@ body {
   z-index: 1;
 }
 
+.bg-manager {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--bg-color); /* Fallback */
+}
+
+.bg-layer {
+  position: absolute;
+  inset: -5%;
+  background-size: cover;
+  background-position: center;
+  transition: opacity 1.5s ease-in-out;
+  transform: scale(1.05); /* Avoid edges due to blur/animations */
+}
+
+.bg-skeleton-pulse {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, var(--bg-color) 0%, rgba(255,255,255,0.05) 50%, var(--bg-color) 100%);
+  background-size: 200% 200%;
+  animation: pulseSkeleton 2s ease infinite;
+}
+
+@keyframes pulseSkeleton {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.bg-loading-indicator {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(10, 15, 30, 0.7);
+  backdrop-filter: blur(8px);
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--primary);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  z-index: 10;
+}
+
+.spin-slow {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .glass-panel::before {
   content: '';
   position: absolute;
