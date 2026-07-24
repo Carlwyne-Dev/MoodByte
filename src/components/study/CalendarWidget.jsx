@@ -1,18 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X, Plus, FileText, Check } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X, Plus, StickyNote, Check } from 'lucide-react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 
 const STORAGE_KEY = 'calendarDayNotes';
 
 function getDayKey(year, month, day) {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-}
-function loadNotes() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; }
-}
-function saveNotes(notes) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
 }
 
 export default function CalendarWidget({ onClose, inlineMode = false }) {
@@ -23,7 +17,7 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
-  const [dayNotes, setDayNotes] = useState(loadNotes);
+  const [dayNotes, setDayNotes] = useLocalStorage(STORAGE_KEY, {});
   const [noteInput, setNoteInput] = useState('');
   const [taskInput, setTaskInput] = useState('');
   const [tasks, setTasks] = useLocalStorage('tasks', []);
@@ -80,23 +74,23 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
       ? (widgetRect ? widgetRect.left - 280 : dayRect.left - 280)
       : (widgetRect ? widgetRect.right + 12 : dayRect.right + 12);
     // Load existing note text for this day
-    const existing = getNoteText(key);
-    setNoteInput(existing);
+    const existing = dayNotes[key] || '';
+    if (Array.isArray(existing)) {
+      setNoteInput(existing.map(n => n.text).join('\n'));
+    } else {
+      setNoteInput(existing);
+    }
     setSelectedDay({ day: d, key, popupTop, popupLeft });
     setTaskInput('');
   };
 
-  const getNoteText = (key) => {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')[key] || ''; }
-    catch { return ''; }
-  };
-
   const saveNoteText = (key, text) => {
-    const all = loadNotes();
-    if (text.trim()) all[key] = text;
-    else delete all[key];
-    saveNotes(all);
-    setDayNotes({ ...all });
+    setDayNotes(prev => {
+      const all = { ...prev };
+      if (text.trim()) all[key] = text;
+      else delete all[key];
+      return all;
+    });
   };
 
   const addDayTask = () => {
@@ -111,12 +105,39 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
       createdAt: selectedDay.key + 'T00:00:00.000Z',
       calendarDate: selectedDay.key
     };
-    setTasks(prev => [newTask, ...prev]);
+    setTasks([newTask, ...tasks]);
     setTaskInput('');
   };
 
+  const sendToStickyNote = () => {
+    if (!noteInput.trim() || !selectedDay) return;
+    const raw = localStorage.getItem('stickyNotes');
+    const existing = raw ? JSON.parse(raw) : [];
+    
+    // Check if a sync note for this specific date already exists
+    if (existing.some(n => n.type === 'calendar-sync' && n.dateKey === selectedDay.key)) return;
+
+    const id = 'cal-sync-' + selectedDay.key;
+    const boardW = window.innerWidth - 360;
+    const newNote = {
+      id,
+      type: 'calendar-sync',
+      dateKey: selectedDay.key,
+      text: '', // Text is read from calendarNotes live
+      color: '#fef08a',
+      font: "'Kalam', cursive",
+      isPinned: false,
+      x: Math.floor(Math.random() * Math.max(20, boardW - 220)) + 10,
+      y: Math.floor(Math.random() * (window.innerHeight - 300)) + 40,
+      zIndex: 20
+    };
+    const updated = [newNote, ...existing];
+    localStorage.setItem('stickyNotes', JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('local-storage', { detail: { key: 'stickyNotes', value: updated } }));
+  };
+
   const toggleDayTask = (id) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+    setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
   };
 
   const selectedNotes = selectedDay ? (dayNotes[selectedDay.key] || []) : [];
@@ -153,6 +174,16 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
     return () => document.removeEventListener('mousedown', handleOutside);
   }, [onClose]);
 
+  // Sync noteInput if dayNotes changes externally while popup is open
+  useEffect(() => {
+    if (selectedDay) {
+      const existing = dayNotes[selectedDay.key] || '';
+      const text = Array.isArray(existing) ? existing.map(n => n.text).join('\n') : existing;
+      if (text !== noteInput) {
+        setNoteInput(text);
+      }
+    }
+  }, [dayNotes, selectedDay]);
 
   const formatSelectedDate = (d) => {
     if (!d) return '';
@@ -239,16 +270,26 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
           {/* ── Notes Section ── */}
           <div className="cal-section">
             <div className="cal-section-label">Note</div>
-            <textarea
-              className="cal-day-textarea"
-              placeholder="Write freely for this day..."
-              value={noteInput}
-              onChange={e => {
-                setNoteInput(e.target.value);
-                saveNoteText(selectedDay.key, e.target.value);
-              }}
-              autoFocus
-            />
+            <div className="cal-note-wrap">
+              <textarea
+                className="cal-day-textarea"
+                placeholder="Write freely for this day..."
+                value={noteInput}
+                onChange={e => {
+                  setNoteInput(e.target.value);
+                  saveNoteText(selectedDay.key, e.target.value);
+                }}
+                autoFocus
+              />
+              <button
+                className={`cal-send-note-btn ${noteInput.trim() ? 'visible' : ''}`}
+                onClick={sendToStickyNote}
+                title="Send to Sticky Notes"
+                tabIndex={noteInput.trim() ? 0 : -1}
+              >
+                <StickyNote size={13} />
+              </button>
+            </div>
           </div>
 
           <div className="cal-divider" />
@@ -278,11 +319,13 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
                 onChange={e => setTaskInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addDayTask(); } }}
               />
-              {taskInput.trim() && (
-                <button className="cal-task-pill-btn" onClick={addDayTask}>
-                  <Plus size={12} />
-                </button>
-              )}
+              <button
+                className={`cal-task-pill-btn ${taskInput.trim() ? 'visible' : ''}`}
+                onClick={addDayTask}
+                tabIndex={taskInput.trim() ? 0 : -1}
+              >
+                <Plus size={12} />
+              </button>
             </div>
           </div>
         </div>,
@@ -498,6 +541,53 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
           text-transform: uppercase; color: rgba(255,255,255,0.35);
           margin-bottom: 6px; font-family: 'Outfit', sans-serif;
         }
+
+        .cal-note-wrap {
+          position: relative;
+        }
+
+        .cal-day-textarea {
+          width: 100%;
+          min-height: 80px;
+          resize: none;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 8px;
+          padding: 8px 10px 28px 10px;
+          color: rgba(255,255,255,0.85);
+          font-size: 0.8rem;
+          font-family: 'Outfit', sans-serif;
+          line-height: 1.5;
+          outline: none;
+          box-sizing: border-box;
+          transition: border-color 0.2s;
+        }
+        .cal-day-textarea::placeholder { color: rgba(255,255,255,0.25); }
+        .cal-day-textarea:focus { border-color: rgba(168,85,247,0.4); }
+
+        .cal-send-note-btn {
+          position: absolute;
+          bottom: 8px;
+          right: 5px;
+          width: 24px;
+          height: 22px;
+          display: flex; align-items: center; justify-content: center;
+          background: var(--primary);
+          border: none;
+          color: #fff;
+          border-radius: 6px;
+          cursor: pointer;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.15s, transform 0.15s;
+          transform: scale(0.85);
+        }
+        .cal-send-note-btn.visible {
+          opacity: 1;
+          pointer-events: auto;
+          transform: scale(1);
+        }
+        .cal-send-note-btn:hover { opacity: 0.85; }
         .cal-divider {
           height: 1px; background: rgba(255,255,255,0.06); margin: 0;
         }
@@ -535,12 +625,15 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
           background: var(--primary); border: none; color: #fff;
           border-radius: 6px; width: 24px; height: 22px;
           display: flex; align-items: center; justify-content: center;
-          cursor: pointer; transition: opacity 0.15s;
-          animation: fadeInBtn 0.12s ease;
+          cursor: pointer; transition: opacity 0.15s, transform 0.15s;
+          opacity: 0;
+          pointer-events: none;
+          transform: translateY(-50%) scale(0.85);
         }
-        @keyframes fadeInBtn {
-          from { opacity: 0; transform: translateY(-50%) scale(0.85); }
-          to   { opacity: 1; transform: translateY(-50%) scale(1); }
+        .cal-task-pill-btn.visible {
+          opacity: 1;
+          pointer-events: auto;
+          transform: translateY(-50%) scale(1);
         }
         .cal-task-pill-btn:hover { opacity: 0.85; }
         .cal-popup-input {

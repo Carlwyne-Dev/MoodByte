@@ -42,13 +42,12 @@ export default function AchievementManager() {
 
     ACHIEVEMENTS.forEach(ach => {
       if (!unlocked.includes(ach.id) && ach.req(stats)) {
-        // Unlock it!
-        setUnlocked(prev => [...prev, ach.id]);
         newlyUnlocked.push(ach);
       }
     });
 
     if (newlyUnlocked.length > 0) {
+      setUnlocked([...unlocked, ...newlyUnlocked.map(a => a.id)]);
       setPopupQueue(prev => [...prev, ...newlyUnlocked]);
     }
   }, [taskHistory, tasks, pomodoroStats, moodHistory]);

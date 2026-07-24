@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { Check, Trash2, ClipboardList, Sparkles, History, X, Plus, Calendar as CalendarIcon } from 'lucide-react';
+import { Check, Trash2, ClipboardList, Sparkles, History, X, Plus, Calendar as CalendarIcon, StickyNote } from 'lucide-react';
 import TaskDatePicker from './TaskDatePicker';
 
 export default function TaskList() {
@@ -115,7 +115,7 @@ export default function TaskList() {
       createdAt: new Date().toISOString(),
       ...(pendingDate ? { calendarDate: pendingDate } : {})
     };
-    setTasks(prev => [newTask, ...prev]);
+    setTasks([newTask, ...tasks]);
     setNewTaskText('');
     setPendingDate(null);
   };
@@ -138,13 +138,38 @@ export default function TaskList() {
     
     // Move to history
     const archived = completedTasks.map(t => ({...t, archivedAt: new Date().toISOString()}));
-    setTaskHistory(prev => [...archived, ...prev].slice(0, 100));
+    setTaskHistory([...archived, ...taskHistory].slice(0, 100));
 
     setRemovingIds(prev => new Set([...prev, ...completedIds]));
     setTimeout(() => {
       setTasks(tasks.filter(t => !t.completed));
       setRemovingIds(new Set());
     }, 280);
+  };
+
+  const dumpTasksToNote = () => {
+    const raw = localStorage.getItem('stickyNotes');
+    const existing = raw ? JSON.parse(raw) : [];
+    
+    // If a task-sync note already exists, don't create another
+    if (existing.some(n => n.type === 'task-sync')) return;
+
+    const id = 'task-sync-widget';
+    const boardW = window.innerWidth - 360;
+    const newNote = {
+      id,
+      type: 'task-sync',
+      text: '', // No static text needed
+      color: '#e9d5ff',
+      font: "'Outfit', sans-serif",
+      isPinned: false,
+      x: Math.floor(Math.random() * Math.max(20, boardW - 220)) + 10,
+      y: Math.floor(Math.random() * (window.innerHeight - 300)) + 40,
+      zIndex: 20
+    };
+    const updated = [newNote, ...existing];
+    localStorage.setItem('stickyNotes', JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('local-storage', { detail: { key: 'stickyNotes', value: updated } }));
   };
 
   const completedCount = tasks.filter(t => t.completed).length;
@@ -169,6 +194,15 @@ export default function TaskList() {
           }
           <div className="task-header-right">
             <span className="task-count-secondary">{completedCount}/{tasks.length}</span>
+            {tasks.filter(t => !t.completed).length > 0 && (
+              <button
+                className="history-icon-btn"
+                onClick={dumpTasksToNote}
+                title="Dump tasks to sticky note"
+              >
+                <StickyNote size={14} />
+              </button>
+            )}
             <button className={`history-icon-btn ${showHistory ? 'active' : ''}`} onClick={toggleHistory} title="Task History">
               <History size={14} />
             </button>

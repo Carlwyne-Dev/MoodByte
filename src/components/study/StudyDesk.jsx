@@ -106,12 +106,21 @@ function ZenTimer() {
     <div className={`zen-timer-container ${isRunning ? 'running' : ''}`}>
       {isEditing ? (
         <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={3}
           className="zen-time-input font-pixel"
           autoFocus
           value={customInput}
-          onChange={e => setCustomInput(e.target.value)}
+          onChange={e => setCustomInput(e.target.value.replace(/[^0-9]/g, ''))}
+          onKeyDown={e => {
+            const controlKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+            if (controlKeys.includes(e.key)) return;
+            if (e.key === 'Enter') { handleCustomSubmit(e); return; }
+            if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+          }}
           onBlur={handleCustomSubmit}
-          onKeyDown={handleCustomSubmit}
         />
       ) : (
         <div 

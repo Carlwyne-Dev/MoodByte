@@ -7,6 +7,7 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
 ## Features
 
 ### Themes & Backgrounds
+
 - **4 Built-in Themes** — Switch instantly between Night, Rainy, Chill, and Focus environments, each with unique animated pixel-art backgrounds, color palettes, and ambient visual effects.
 - **Custom Backgrounds** — Upload your own background images (up to 3 per theme). Your custom wallpapers are persisted in IndexedDB so they survive browser restarts without re-uploading.
 - **Theme UI Preview** — A dedicated Themes modal shows a real-time glassmorphism preview of how your UI will look against your chosen background before applying it.
@@ -14,35 +15,49 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
 - **Mood-Based Theme Suggestions** — After logging your mood, MoodByte suggests a matching theme (e.g., "Rainy" for a bad mood) and lets you switch with one click.
 
 ### Live Clock
-- **Real-Time Display** — A beautiful, highly aesthetic live clock sits on the top right of the main board.
-- **Animated Digits** — As time passes, the numbers feature a smooth, individual slide-up CSS animation, bringing life to the dashboard.
+
+- **Real-Time Display** — A beautiful, highly aesthetic live clock sits on the top left of the main board.
+- **Animated Digits** — Each digit features a smooth, individual slide-up CSS animation, bringing life to the dashboard.
 - **Hover Reveal** — AM/PM indicators elegantly slide out on hover to keep the interface minimal by default.
 
 ### Mobile Experience
+
 - **Responsive Design** — Fully optimized for mobile with a custom bottom navigation bar and fluid app-like interactions.
 - **Floating Music Pill** — On mobile, the music player minimizes into an elegant, auto-hiding pill that floats above the bottom nav.
 - **App-like Sheets** — Mobile views use smooth slide-up sheets and trays instead of modal popups for a native feel.
 
 ### Study Desk
+
 - **Full Zen Mode** — A distraction-free, full-screen study environment with its own ambient background.
-- **Sticky Note Board** — Pin, drag, and recolor quick thoughts and reminders directly onto the study desk wall.
+- **Sticky Note Board** — Pin, drag, and recolor quick thoughts and reminders directly onto the screen.
+  - **Live Task Sync** — Send your active tasks to a dynamic sticky note. Check off tasks right on the note, and watch them instantly sync with your main task list.
+  - **Live Calendar Sync** — Export a specific day's calendar note to the board. Editing the sticky note instantly updates the calendar, and vice versa.
 - **File Viewer** — Upload and read PDFs or `.txt` files directly inside the Study Desk without leaving the app.
 - **Study Pet** — A virtual pixel-art pet that lives at the bottom of the study desk. Choose between 8 variants (Dog 1 & 2, Cat 1 & 2, Rat 1 & 2, Bird 1 & 2), name them, and watch them roam across the screen with smooth walking animations.
   - **Pet Dialogue** — Your pet comments on your focus session, break time, and idle state with unique rotating quotes and fun animal facts.
   - **Treat System** — Earn loot drops (Common, Rare, Epic, Legendary) by completing Pomodoro focus sessions. Open the Treat Stash and drag-and-drop treats using a custom physics engine. Your pet will sprint over and eat them!
 
 ### Pomodoro Timer
+
 - Configurable work and break durations.
 - Visual countdown with session state (Focusing / Break).
 - Tracks total completed Pomodoro sessions for stats and achievements.
 - Loot drops to your pet's Treat Stash at the end of each focus session.
 
 ### Music Player
+
 - **Local Music** — Load MP3 files directly from your device and play them in-app.
 - **Spotify Integration** — Paste a Spotify playlist/album link and open it directly.
 - Playback controls: play, pause, previous, next, and track progress display.
 
+### Live Radio / BGM
+
+- **Ambient Radio Streams** — A curated selection of lo-fi, jazz, and chillhop internet radio stations stream directly inside the app.
+- **One-Tap Listening** — Tap any station to start streaming instantly, no sign-up required.
+- **Background Playback** — Radio continues playing while you use other parts of the app.
+
 ### Mood Tracker
+
 - Log your current mood from 8 states (Great, Good, Okay, Meh, Bad, Angry, Tired, Energetic).
 - Add a personal reflection note to each log.
 - Mood history stored locally (last 20 entries).
@@ -50,11 +65,13 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
 - Mood History panel to review past entries with their timestamps.
 
 ### Task Manager
+
 - Add, complete, and delete tasks.
 - Completed tasks are moved to a task history archive.
 - Task completion counts toward your streak and achievements.
 
 ### Stats & Analytics
+
 - **Stats Modal** — Visual overview of your productivity including:
   - Total completed tasks
   - Total Pomodoro sessions
@@ -63,6 +80,7 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
   - Full achievement board (locked/unlocked state)
 
 ### Achievements
+
 - 9 unlockable milestones across Tasks, Focus, and Moods:
   - First Step — Complete 1 task
   - Task Master — Complete 10 tasks
@@ -77,12 +95,14 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
 - **Queue System** — If multiple achievements unlock at once, they display one by one so none are missed.
 
 ### Daily Streak
+
 - A fire icon in the top-right corner tracks your daily activity streak.
 - The fire animates in full color when you're active and goes grey when your streak is at risk.
 - Hover to see your current streak count and a message about your progress.
 - A streak counts when you log a mood, complete a task, or archive a finished task in a given day.
 
 ### Cloud Sync & Settings
+
 - **Cross-Platform Sync** — Log in with your Google account via Supabase OAuth to synchronize all your tasks, stats, and settings across your PC and mobile devices.
 - **Danger Zone** — A dedicated option inside the Settings modal to instantly and securely erase all your local and cloud data if needed.
 - **Dedicated Modals** — Settings and Appearance (Themes) are thoughtfully separated to give each the space they need without feeling cramped.
@@ -90,6 +110,7 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
 - **Pet Configuration** — Enable/disable, pick an animal, and rename your pet from the Study Desk settings.
 
 ### Onboarding
+
 - A welcome modal greets new users and walks them through MoodByte's features.
 - A separate welcome modal plays when opening the Study Desk for the first time.
 - Both modals only show once (tracked via localStorage).
@@ -102,8 +123,8 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
 |---|---|
 | Framework | React 18 + Vite |
 | Styling | Vanilla CSS (glassmorphism, CSS variables, keyframe animations) |
-| Persistence | localStorage + IndexedDB + Supabase
-Authentication | Supabase OAuth (Google) |
+| Persistence | localStorage + IndexedDB + Supabase |
+| Authentication | Supabase OAuth (Google) |
 | Icons | Lucide React |
 | Pet Physics | Custom `requestAnimationFrame` loop (60fps DOM animation) |
 | Audio | Web Audio API (`new Audio()`) |

@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import BgmPlayer from '../bgm/BgmPlayer';
+import LiveRadio from '../bgm/LiveRadio';
+import { useTheme } from '../../context/ThemeContext';
 import StatsModal from '../stats/StatsModal';
 import SettingsModal from '../settings/SettingsModal';
 import SyncModal from '../settings/SyncModal';
@@ -63,6 +65,8 @@ let noteZCounter = 20;
 export default function StickyNoteBoard() {
   const isMobile = useIsMobile();
   const [notes, setNotes] = useLocalStorage('stickyNotes', []);
+  const [tasks, setTasks] = useLocalStorage('tasks', []);
+  const [calendarNotes, setCalendarNotes] = useLocalStorage('calendarDayNotes', {});
   const [activePopup, setActivePopup] = useState(null);
   const [closingPopup, setClosingPopup] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -78,6 +82,19 @@ export default function StickyNoteBoard() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user || null));
     return () => subscription.unsubscribe();
   }, []);
+  
+  const toggleTask = (id) => {
+    setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+  };
+  
+  const updateCalendarNote = (dateKey, text) => {
+    setCalendarNotes(prev => {
+      const updated = { ...prev };
+      if (!text.trim()) delete updated[dateKey];
+      else updated[dateKey] = text;
+      return updated;
+    });
+  };
   
   // Animated close — plays popOut then clears
   const closePopup = React.useCallback(() => {
@@ -170,7 +187,7 @@ export default function StickyNoteBoard() {
     if (isPinned) return;
     // Use closest() so SVG/path children of buttons are also caught
     if (e.target.closest('button') || e.target.closest('.popup-bubble')) return;
-    if (e.target.tagName === 'TEXTAREA') return;
+    if (e.target.tagName === 'TEXTAREA' || e.target.closest('.task-sync-item')) return;
 
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -249,6 +266,7 @@ export default function StickyNoteBoard() {
       <div className="top-left-wrapper">
         <div className="top-left-controls">
         <BgmPlayer />
+        <LiveRadio />
         <div className="nav-separator" />
         <button 
           className="stats-btn" 
@@ -423,12 +441,44 @@ export default function StickyNoteBoard() {
             </div>
           </div>
 
-          <textarea
-            value={note.text}
-            onChange={e => updateNote(note.id, { text: e.target.value })}
-            placeholder="type shi..."
-            style={{ fontFamily: note.font || FONTS[0].value }}
-          />
+          {note.type === 'task-sync' ? (
+            <div className="task-sync-content" style={{ fontFamily: note.font || FONTS[0].value }}>
+              <div className="task-sync-title">Tasks</div>
+              {tasks.length === 0 && <div className="task-sync-empty">No tasks yet.</div>}
+              <div className="task-sync-list">
+                {tasks.map(t => (
+                  <div key={t.id} className={`task-sync-item ${t.completed ? 'completed' : ''}`} onClick={(e) => { e.stopPropagation(); toggleTask(t.id); }}>
+                    <div className="task-sync-check">
+                      {t.completed && <CheckCircle2 size={12} strokeWidth={3} />}
+                    </div>
+                    <span className="task-sync-text">
+                      {t.text}
+                      {t.calendarDate && <span className="task-sync-date"> {new Date(t.calendarDate + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : note.type === 'calendar-sync' ? (
+            <div className="cal-sync-content" style={{ position: 'relative', width: '100%', height: '100%' }}>
+              <textarea
+                value={calendarNotes[note.dateKey] || ''}
+                onChange={e => updateCalendarNote(note.dateKey, e.target.value)}
+                placeholder="type shi..."
+                style={{ fontFamily: note.font || FONTS[0].value, height: '100%', paddingBottom: '24px' }}
+              />
+              <div className="cal-sync-date-label">
+                {new Date(note.dateKey + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              </div>
+            </div>
+          ) : (
+            <textarea
+              value={note.text}
+              onChange={e => updateNote(note.id, { text: e.target.value })}
+              placeholder="type shi..."
+              style={{ fontFamily: note.font || FONTS[0].value }}
+            />
+          )}
         </div>
         );
       })}
@@ -828,6 +878,89 @@ export default function StickyNoteBoard() {
             opacity: 1 !important;
           }
         }
+        /* ── Task Sync Note ─────────────────────────────────────────── */
+        .task-sync-content {
+          padding: 8px 10px;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          color: rgba(0,0,0,0.85);
+          cursor: default;
+        }
+        .task-sync-title {
+          font-weight: bold;
+          margin-bottom: 8px;
+          font-size: 1.1em;
+          border-bottom: 1px solid rgba(0,0,0,0.1);
+          padding-bottom: 4px;
+        }
+        .task-sync-list {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          overflow-y: auto;
+          flex: 1;
+        }
+        .task-sync-list::-webkit-scrollbar { width: 4px; }
+        .task-sync-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+        .task-sync-empty {
+          color: rgba(0,0,0,0.4);
+          font-style: italic;
+          font-size: 0.9em;
+        }
+        .task-sync-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 6px;
+          cursor: pointer;
+          font-size: 0.95em;
+          line-height: 1.3;
+          transition: opacity 0.2s;
+        }
+        .task-sync-item:hover {
+          opacity: 0.8;
+        }
+        .task-sync-item.completed {
+          opacity: 0.5;
+          text-decoration: line-through;
+        }
+        .task-sync-check {
+          width: 14px;
+          height: 14px;
+          border-radius: 3px;
+          border: 1.5px solid rgba(0,0,0,0.3);
+          margin-top: 2px;
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: rgba(0,0,0,0.6);
+        }
+        .task-sync-item.completed .task-sync-check {
+          border-color: rgba(0,0,0,0.6);
+        }
+        .task-sync-text {
+          flex: 1;
+          word-break: break-word;
+        }
+        .task-sync-date {
+          font-size: 0.8em;
+          opacity: 0.6;
+        }
+
+        /* ── Calendar Sync Note ─────────────────────────────────────────── */
+        .cal-sync-date-label {
+          position: absolute;
+          bottom: 5px;
+          right: 5px;
+          font-size: 0.8rem;
+          opacity: 0.4;
+          color: #000;
+          pointer-events: none;
+          font-family: 'Outfit', sans-serif;
+          font-weight: 500;
+        }
+
       `}</style>
     </div>
   );

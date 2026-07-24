@@ -9,6 +9,7 @@ import LoadingScreen from './components/LoadingScreen';
 import WelcomeModal from './components/WelcomeModal';
 import AchievementManager from './components/stats/AchievementManager';
 import StreakCounter from './components/stats/StreakCounter';
+import WhatsNewModal from './components/settings/WhatsNewModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useCloudSync } from './hooks/useCloudSync';
@@ -68,6 +69,18 @@ function App() {
   });
   const [hasSeenAppWelcome, setHasSeenAppWelcome] = useLocalStorage('moodbyte_welcome_main', false);
   const [showAbout, setShowAbout] = React.useState(false);
+  const [showWhatsNew, setShowWhatsNew] = React.useState(false);
+
+  // Intercept browser back button — push a dummy state on mount,
+  // then re-push whenever popstate fires so the back button never leaves the page.
+  useEffect(() => {
+    history.pushState({ moodbyte: true }, '');
+    const handlePop = () => {
+      history.pushState({ moodbyte: true }, '');
+    };
+    window.addEventListener('popstate', handlePop);
+    return () => window.removeEventListener('popstate', handlePop);
+  }, []);
 
   const toggle = (key) => setMinimized(prev => ({ ...prev, [key]: !prev[key] }));
 
@@ -192,11 +205,17 @@ function App() {
             </div>
           </div>
 
-          {/* About Button */}
-          <button className="about-btn" onClick={() => setShowAbout(true)}>About</button>
+          {/* Footer Buttons */}
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+            <button className="about-btn" onClick={() => setShowWhatsNew(true)}>What's New</button>
+            <button className="about-btn" onClick={() => setShowAbout(true)}>About</button>
+          </div>
 
         </div>
       </aside>
+
+      {/* What's New Modal */}
+      {showWhatsNew && <WhatsNewModal onClose={() => setShowWhatsNew(false)} />}
 
       {/* About Modal */}
       {showAbout && (

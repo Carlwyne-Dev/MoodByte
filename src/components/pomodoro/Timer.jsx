@@ -66,7 +66,20 @@ export default function Timer() {
   };
 
   const handleCustomChange = (e) => {
-    setInputValue(e.target.value);
+    // Only allow numeric characters
+    const val = e.target.value.replace(/[^0-9]/g, '');
+    setInputValue(val);
+  };
+
+  const handleCustomKeyDown = (e) => {
+    // Whitelist: allow digits, control keys only. Block everything else.
+    const controlKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    if (controlKeys.includes(e.key)) return;
+    if (e.key === 'Enter') { saveCustomMins(); return; }
+    // Block any key that isn't a single digit 0-9
+    if (!/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+    }
   };
 
   const saveCustomMins = () => {
@@ -111,15 +124,16 @@ export default function Timer() {
         {isEditing ? (
           <div className="custom-input-wrap">
             <input 
-              type="number" 
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={inputValue} 
               onChange={handleCustomChange}
+              onKeyDown={handleCustomKeyDown}
               onBlur={saveCustomMins}
-              onKeyDown={(e) => e.key === 'Enter' && saveCustomMins()}
               autoFocus
               className="custom-input font-pixel"
-              min="1"
-              max="999"
+              maxLength={3}
               placeholder="00"
             />
             <span className="min-label">min</span>
