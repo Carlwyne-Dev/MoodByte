@@ -268,7 +268,7 @@ export default function LiveRadio() {
             </div>
             <div 
               className="tuner-needle" 
-              style={{ left: `${(currentIndex / Math.max(1, RADIO_CHANNELS.length - 1)) * 95 + 2.5}%` }}
+              style={{ left: `${(currentIndex / Math.max(1, RADIO_CHANNELS.length - 1)) * 90 + 5}%` }}
             />
           </div>
 
