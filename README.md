@@ -9,10 +9,11 @@ MoodByte is a personal, highly aesthetic productivity web app designed to help y
 ### Themes & Backgrounds
 
 - **4 Built-in Themes** — Switch instantly between Night, Rainy, Chill, and Focus environments, each with unique animated pixel-art backgrounds, color palettes, and ambient visual effects.
-- **Custom Backgrounds** — Upload your own background images (up to 3 per theme). Your custom wallpapers are persisted in IndexedDB so they survive browser restarts without re-uploading.
-- **Theme UI Preview** — A dedicated Themes modal shows a real-time glassmorphism preview of how your UI will look against your chosen background before applying it.
-- **Automatic Background Rotation** — MoodByte rotates through both default and your custom backgrounds automatically while keeping all defaults available.
-- **Mood-Based Theme Suggestions** — After logging your mood, MoodByte suggests a matching theme (e.g., "Rainy" for a bad mood) and lets you switch with one click.
+- **Dedicated Appearance Modal** — Themes now have their own full-screen modal separate from Settings, giving you a clean space to preview and configure your look.
+- **Custom Backgrounds** — Upload up to 3 wallpapers per theme. Your images are persisted in IndexedDB so they survive browser restarts without re-uploading.
+- **Live UI Preview** — See a real-time glassmorphism preview of how your wallpaper looks behind MoodByte's UI before committing to it.
+- **Automatic Background Rotation** — MoodByte cycles through both built-in and your custom backgrounds automatically.
+- **Mood-Based Theme Suggestions** — After logging your mood, MoodByte suggests a matching theme and lets you switch with one click.
 
 ### Live Clock
 

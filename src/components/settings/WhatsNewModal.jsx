@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Sparkles, LayoutList, CalendarHeart, MousePointerClick, FileText, ChevronRight, ChevronLeft } from 'lucide-react';
+import { X, Sparkles, Radio, Clock, Cloud, LayoutList, ChevronRight, ChevronLeft } from 'lucide-react';
 
 const UPDATES = [
   {
-    icon: <LayoutList size={36} className="text-pink-400" />,
-    title: "Live Task Sync Notes",
-    desc: "Send your active tasks straight to the Sticky Note Board. Check off items right on the wall and watch them instantly sync with your main list!"
+    icon: <Radio size={36} className="text-pink-400" />,
+    title: "FM Radio / Live BGM",
+    desc: "Tune in to curated lo-fi, jazz, and chillhop internet radio stations directly inside the app. One tap and the music never stops."
   },
   {
-    icon: <CalendarHeart size={36} className="text-blue-400" />,
-    title: "Live Calendar Sync",
-    desc: "Export any day's calendar note directly to the board. Typing on the sticky note updates the calendar in real time, and vice versa."
+    icon: <Clock size={36} className="text-blue-400" />,
+    title: "Live Animated Clock",
+    desc: "A sleek real-time clock now lives on the board with smooth digit animations and a hover-reveal AM/PM indicator."
   },
   {
-    icon: <MousePointerClick size={36} className="text-purple-400" />,
-    title: "Custom Note Styling",
-    desc: "Make your board yours. You can now change the font style, colors, and pin important notes to keep them on top."
+    icon: <Cloud size={36} className="text-purple-400" />,
+    title: "Cross-Platform Cloud Sync",
+    desc: "Sign in with Google to sync your tasks, stats, and settings across all your devices — PC, tablet, and mobile — instantly."
   },
   {
-    icon: <FileText size={36} className="text-emerald-400" />,
-    title: "Study Desk File Viewer",
-    desc: "Upload and read PDFs or .txt files directly inside the Study Desk environment without ever leaving the app or losing focus."
+    icon: <LayoutList size={36} className="text-emerald-400" />,
+    title: "Live Sync Notes",
+    desc: "Send tasks or calendar notes straight to the Sticky Note Board. Edits on the note sync back to the source in real time."
   }
 ];
 
