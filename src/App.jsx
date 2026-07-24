@@ -9,7 +9,9 @@ import LoadingScreen from './components/LoadingScreen';
 import WelcomeModal from './components/WelcomeModal';
 import AchievementManager from './components/stats/AchievementManager';
 import StreakCounter from './components/stats/StreakCounter';
+import SyncModal from './components/settings/SyncModal';
 import WhatsNewModal from './components/settings/WhatsNewModal';
+import AboutModal from './components/settings/AboutModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useCloudSync } from './hooks/useCloudSync';
@@ -26,9 +28,9 @@ const THEMES = [
 ];
 
 function BackgroundManager({ bgImage }) {
-  const [layers, setLayers] = useState([{ id: Date.now(), src: bgImage }]);
+  const [layers, setLayers] = React.useState([{ id: Date.now(), src: bgImage }]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     // When bgImage changes, add it as a new layer
     setLayers(prev => {
       if (prev[prev.length - 1].src === bgImage) return prev;
@@ -282,21 +284,7 @@ function App() {
       {showWhatsNew && <WhatsNewModal onClose={() => setShowWhatsNew(false)} />}
 
       {/* About Modal */}
-      {showAbout && (
-        <div className="about-overlay" onClick={() => setShowAbout(false)}>
-          <div className="about-modal" onClick={e => e.stopPropagation()}>
-            <h2 className="about-modal-title">About MoodByte</h2>
-            <p className="about-modal-text">
-              MoodByte started as a random thought in 2025 — what if a sticky note board had themes, a Pomodoro timer, and a music player? It grew into something more: a safe space for your thoughts, whether it's schoolwork or personal stuff. No hard productivity pressure, just a cozy home for whatever's on your mind.
-            </p>
-            <p className="about-modal-text">
-              This is a full rebuild of the original MoodByte, shelved for a while because I hit the limits of what I knew at the time. Now, it's back and better than ever, built during late nights in a dorm room, driven by a love for pixel art and retro aesthetics.
-            </p>
-            <p className="about-modal-footer">Made with <span style={{ color: '#ef4444', animation: 'pulse 2s ease-in-out infinite' }}>❤</span>. Hope ya'll like it.</p>
-            <button className="about-close-btn" onClick={() => setShowAbout(false)}>Close</button>
-          </div>
-        </div>
-      )}
+      {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
 
       <style jsx="true">{`
         .app-container {
@@ -614,7 +602,6 @@ function App() {
           display: flex;
           align-items: center;
           justify-content: center;
-          animation: fadeIn 0.2s ease;
         }
 
         .about-modal {
@@ -628,7 +615,6 @@ function App() {
           flex-direction: column;
           gap: 1.1rem;
           box-shadow: 0 30px 60px rgba(0,0,0,0.5);
-          animation: slideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .about-modal-title {

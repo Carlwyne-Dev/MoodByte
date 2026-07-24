@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { X, CheckSquare, Clock, Award, Activity, Star, Timer, Heart, Flame, Smile } from 'lucide-react';
+import { X, CheckSquare, Clock, Award, Activity, Star, Timer, Heart, Flame, Smile, BarChart2 } from 'lucide-react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { ACHIEVEMENTS } from './AchievementManager';
 
@@ -11,6 +11,8 @@ export default function StatsModal({ onClose }) {
   const [tasks] = useLocalStorage('tasks', []);
   const [pomodoroStats] = useLocalStorage('pomodoroStats', { sessions: 0 });
   const [moodHistory] = useLocalStorage('moodHistory', []);
+  
+  const [isClosing, setIsClosing] = React.useState(false);
   const [unlockedAchievements] = useLocalStorage('unlockedAchievements', []);
 
   // Compute stats
@@ -72,15 +74,22 @@ export default function StatsModal({ onClose }) {
 
   const maxActivity = Math.max(...Object.values(activityByDate), 1); // Avoid div by 0
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      if (onClose) onClose();
+    }, 200);
+  };
+
   return createPortal(
-    <div className="stats-overlay fade-in" onClick={onClose}>
-      <div className="full-stats-modal pop-in" onClick={e => e.stopPropagation()}>
+    <div className={`stats-overlay ${isClosing ? 'ui-overlay-exit' : 'ui-overlay-enter'}`} onClick={handleClose}>
+      <div className={`full-stats-modal ${isClosing ? 'ui-modal-exit' : 'ui-modal-enter'}`} onClick={e => e.stopPropagation()}>
         <div className="stats-header-bar">
           <div className="header-title">
             <Activity size={24} className="header-icon" />
             <h2>Full Analytics</h2>
           </div>
-          <button className="stats-close-btn" onClick={onClose}><X size={20} /></button>
+          <button className="stats-close-btn" onClick={handleClose}><X size={20} /></button>
         </div>
 
         <div className="stats-scroll-content">

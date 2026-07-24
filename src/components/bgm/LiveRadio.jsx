@@ -223,11 +223,10 @@ export default function LiveRadio() {
       {/* Tuner Interface */}
       {(showDropdown || isClosing) && createPortal(
         <div 
-          className={`tuner-popup ${isClosing ? 'pop-out' : 'pop-in'} ${isPlaying ? 'tuner-playing-glow' : ''}`} 
+          className={`tuner-popup ${isClosing ? 'ui-modal-exit' : 'ui-modal-enter'} ${isPlaying ? 'tuner-playing-glow' : ''}`} 
           ref={dropdownRef}
           style={{ top: popupPos.top, left: popupPos.left, position: 'fixed' }}
         >
-          
           <div className="tuner-header">
             <span className="tuner-frequency digital-readout">
               FM {(88 + (currentIndex * (20 / Math.max(1, RADIO_CHANNELS.length - 1)))).toFixed(1)}

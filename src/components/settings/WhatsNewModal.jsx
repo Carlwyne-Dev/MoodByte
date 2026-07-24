@@ -27,10 +27,18 @@ const UPDATES = [
 
 export default function WhatsNewModal({ onClose }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isClosing, setIsClosing] = React.useState(false);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      if (onClose) onClose();
+    }, 200);
+  };
 
   React.useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') handleClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -40,7 +48,7 @@ export default function WhatsNewModal({ onClose }) {
     if (currentIndex < UPDATES.length - 1) {
       setCurrentIndex(prev => prev + 1);
     } else {
-      onClose();
+      handleClose();
     }
   };
 
@@ -53,12 +61,8 @@ export default function WhatsNewModal({ onClose }) {
   const currentUpdate = UPDATES[currentIndex];
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 100000 }}>
-      <button className="floating-close" onClick={onClose}>
-        <X size={24} />
-      </button>
-
-      <div className="floating-container" onClick={e => e.stopPropagation()}>
+    <div className={`modal-overlay ${isClosing ? 'ui-overlay-exit' : 'ui-overlay-enter'}`} onClick={handleClose} style={{ zIndex: 100000 }}>
+      <div className={`floating-container ${isClosing ? 'ui-modal-exit' : 'ui-modal-enter'}`} onClick={e => e.stopPropagation()}>
         
         <div className="floating-header">
           <Sparkles size={24} className="floating-header-icon" />

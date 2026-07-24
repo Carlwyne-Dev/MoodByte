@@ -143,3 +143,35 @@ button {
   border: 2px solid transparent; 
   background-clip: padding-box; 
 }
+
+/* ── Universal UI Animations ──────────────────────── */
+.ui-overlay-enter {
+  animation: overlayFadeIn 0.3s ease forwards;
+}
+.ui-overlay-exit {
+  animation: overlayFadeOut 0.2s ease forwards;
+}
+
+.ui-modal-enter {
+  animation: modalPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.ui-modal-exit {
+  animation: modalPopOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes overlayFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes modalPopIn {
+  0% { opacity: 0; scale: 0.9; margin-top: 15px; }
+  100% { opacity: 1; scale: 1; margin-top: 0px; }
+}
+@keyframes modalPopOut {
+  0% { opacity: 1; scale: 1; margin-top: 0px; }
+  100% { opacity: 0; scale: 0.9; margin-top: 15px; }
+}

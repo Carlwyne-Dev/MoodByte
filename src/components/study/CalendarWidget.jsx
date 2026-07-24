@@ -12,6 +12,7 @@ function getDayKey(year, month, day) {
 export default function CalendarWidget({ onClose, inlineMode = false }) {
   const [position, setPosition] = useState({ x: 50, y: 150 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const widgetRef = useRef(null);
 
@@ -21,6 +22,13 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
   const [noteInput, setNoteInput] = useState('');
   const [taskInput, setTaskInput] = useState('');
   const [tasks, setTasks] = useLocalStorage('tasks', []);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      if (onClose) onClose();
+    }, 200);
+  };
 
   const onPointerDown = (e) => {
     if (inlineMode) return;
@@ -167,7 +175,7 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
         widgetRef.current && !widgetRef.current.contains(e.target) &&
         !e.target.closest('.cal-day-popup')
       ) {
-        onClose();
+        handleClose();
       }
     };
     document.addEventListener('mousedown', handleOutside);
@@ -196,7 +204,7 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
     <>
       <div
         ref={widgetRef}
-        className={`calendar-widget ${isDragging ? 'dragging' : ''} ${inlineMode ? 'inline-mode' : ''}`}
+        className={`calendar-widget ${isDragging ? 'dragging' : ''} ${inlineMode ? 'inline-mode' : ''} ${isClosing ? 'closing' : ''}`}
         style={!inlineMode ? { transform: `translate(${position.x}px, ${position.y}px)` } : {}}
       >
         <div
@@ -208,7 +216,7 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
           <div className="cal-title font-pixel">
             <CalendarIcon size={14} /> Planner
           </div>
-          <button className="cal-close-btn" onClick={onClose}><X size={14} /></button>
+          <button className="cal-close-btn" onClick={handleClose}><X size={14} /></button>
         </div>
 
         <div className="calendar-body">
@@ -345,7 +353,23 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
           pointer-events: auto;
           user-select: none;
           -webkit-user-select: none;
+          animation: calWidgetPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+        
+        @keyframes calWidgetPopIn {
+          0% { opacity: 0; scale: 0.9; margin-top: 15px; }
+          100% { opacity: 1; scale: 1; margin-top: 0px; }
+        }
+
+        @keyframes calWidgetPopOut {
+          0% { opacity: 1; scale: 1; margin-top: 0px; }
+          100% { opacity: 0; scale: 0.9; margin-top: 15px; }
+        }
+        
+        .calendar-widget.closing {
+          animation: calWidgetPopOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+        }
+
         .calendar-widget:not(.inline-mode) {
           position: absolute; top: 0; left: 0;
           z-index: 100; transition: box-shadow 0.2s;

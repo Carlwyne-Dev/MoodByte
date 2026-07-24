@@ -111,7 +111,25 @@ export default function StudyPet({ showSettings, onCloseSettings }) {
   });
   const [lootPopup, setLootPopup] = useState(null);
   const [showStash, setShowStash] = useState(false);
+  const [isStashClosing, setIsStashClosing] = useState(false);
+  const [isSettingsClosing, setIsSettingsClosing] = useState(false);
   const [draggedTreat, setDraggedTreat] = useState(null);
+
+  const closeStash = () => {
+    setIsStashClosing(true);
+    setTimeout(() => {
+      setShowStash(false);
+      setIsStashClosing(false);
+    }, 200);
+  };
+
+  const closeSettings = () => {
+    setIsSettingsClosing(true);
+    setTimeout(() => {
+      onCloseSettings();
+      setIsSettingsClosing(false);
+    }, 200);
+  };
   const requestRef = useRef(null);
   
   const lastActiveRef = useRef(Date.now());
@@ -163,10 +181,10 @@ export default function StudyPet({ showSettings, onCloseSettings }) {
     // Click outside listener for modals
     const handleClickOutside = (e) => {
       if (stashModalRef.current && !stashModalRef.current.contains(e.target)) {
-        if (!e.target.closest('.treat-stash-btn')) setShowStash(false);
+        if (!e.target.closest('.treat-stash-btn')) closeStash();
       }
       if (settingsModalRef.current && !settingsModalRef.current.contains(e.target)) {
-        if (!e.target.closest('.pet-settings-btn')) onCloseSettings();
+        if (!e.target.closest('.pet-settings-btn')) closeSettings();
       }
     };
 
@@ -439,7 +457,7 @@ export default function StudyPet({ showSettings, onCloseSettings }) {
     if (treatInventory[rarity] > 0) {
       setTreatInventory(prev => ({ ...prev, [rarity]: prev[rarity] - 1 }));
       setDraggedTreat({ rarity, x: e.clientX, y: e.clientY });
-      setShowStash(false);
+      closeStash();
     }
   };
 
@@ -521,10 +539,10 @@ export default function StudyPet({ showSettings, onCloseSettings }) {
 
       {/* Treat Stash Modal */}
       {showStash && (
-        <div ref={stashModalRef} className="treat-stash-modal fade-in">
+        <div ref={stashModalRef} className={`treat-stash-modal ${isStashClosing ? 'ui-modal-exit' : 'ui-modal-enter'}`}>
           <div className="treat-stash-header">
             <h3>Treat Stash</h3>
-            <button className="icon-btn" onClick={() => setShowStash(false)}><X size={16} /></button>
+            <button className="icon-btn" onClick={closeStash}><X size={16} /></button>
           </div>
           <p className="stash-desc">Drag and drop a treat for your pet!</p>
           <div className="treat-list">
@@ -563,10 +581,11 @@ export default function StudyPet({ showSettings, onCloseSettings }) {
       )}
 
       {showSettings && (
-        <div ref={settingsModalRef} className="pet-settings-modal fade-in">
+        <div className={`pet-settings-overlay ${isSettingsClosing ? 'ui-overlay-exit' : 'ui-overlay-enter'}`} onClick={closeSettings}>
+          <div ref={settingsModalRef} className={`pet-settings-modal ${isSettingsClosing ? 'ui-modal-exit' : 'ui-modal-enter'}`} onClick={e => e.stopPropagation()}>
           <div className="pet-settings-header">
             <h3>Pet Settings</h3>
-            <button className="icon-btn" onClick={onCloseSettings}><X size={16} /></button>
+            <button className="icon-btn" onClick={closeSettings}><X size={16} /></button>
           </div>
           <div className="pet-settings-body">
             {/* Pet Preview Area */}
@@ -617,6 +636,7 @@ export default function StudyPet({ showSettings, onCloseSettings }) {
             
             <button className="apply-settings-btn" onClick={applySettings}>Save Changes</button>
           </div>
+        </div>
         </div>
       )}
 

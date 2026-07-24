@@ -8,6 +8,7 @@ export default function SyncModal({ onClose }) {
   const [user, setUser] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showNavRail, setShowNavRail] = useLocalStorage('moodbyte_show_nav_rail', true);
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -20,6 +21,13 @@ export default function SyncModal({ onClose }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      if (onClose) onClose();
+    }, 200);
+  };
 
   const handleGoogleLogin = async () => {
     sessionStorage.setItem('moodbyte_expecting_login', 'true');
@@ -45,14 +53,14 @@ export default function SyncModal({ onClose }) {
   };
 
   return createPortal(
-    <div className="settings-overlay fade-in" onClick={onClose}>
-      <div className="settings-modal pop-in" onClick={e => e.stopPropagation()}>
+    <div className={`settings-overlay ${isClosing ? 'ui-overlay-exit' : 'ui-overlay-enter'}`} onClick={handleClose}>
+      <div className={`settings-modal ${isClosing ? 'ui-modal-exit' : 'ui-modal-enter'}`} onClick={e => e.stopPropagation()}>
         <div className="settings-header">
           <div className="header-title">
             <SettingsIcon size={24} className="header-icon" />
             <h2>Settings</h2>
           </div>
-          <button className="settings-close-btn" onClick={onClose}><X size={20} /></button>
+          <button className="settings-close-btn" onClick={handleClose}><X size={20} /></button>
         </div>
 
         <div className="settings-content">
@@ -126,12 +134,10 @@ export default function SyncModal({ onClose }) {
       </div>
 
       {showConfirm && (
-        <div className="settings-overlay fade-in" style={{ zIndex: 10000 }}>
-          <div className="confirm-modal pop-in">
-            <div className="confirm-icon-wrap">
-              <AlertTriangle size={32} color="#ef4444" />
-            </div>
-            <h3>Delete All Data?</h3>
+        <div className={`settings-overlay ${isClosing ? 'ui-overlay-exit' : 'ui-overlay-enter'}`} style={{ zIndex: 10000 }}>
+          <div className={`confirm-modal ${isClosing ? 'ui-modal-exit' : 'ui-modal-enter'}`}>
+            <AlertTriangle size={32} color="#ef4444" style={{ marginBottom: 12 }} />
+            <h3 style={{ color: '#fff', fontSize: '1.2rem', margin: '0 0 10px', fontFamily: "'Outfit', sans-serif" }}>Are you absolutely sure?</h3>
             <p>This will permanently erase all your tasks, stats, custom themes, and cloud backups. This action <strong>cannot</strong> be undone.</p>
             <div className="confirm-actions">
               <button className="confirm-cancel" onClick={() => setShowConfirm(false)}>Cancel</button>

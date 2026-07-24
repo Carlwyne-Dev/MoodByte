@@ -16,6 +16,7 @@ export default function SettingsModal({ onClose }) {
   const [previewUrls, setPreviewUrls] = React.useState({});
   const [activeThemeId, setActiveThemeId] = React.useState(theme || THEMES[0].id);
   const [activeBgIndex, setActiveBgIndex] = React.useState(0);
+  const [isClosing, setIsClosing] = React.useState(false);
 
   React.useEffect(() => {
     let active = true;
@@ -42,6 +43,13 @@ export default function SettingsModal({ onClose }) {
     };
   }, [customBgs]);
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      if (onClose) onClose();
+    }, 200);
+  };
+
   const handleUploadBg = async (e, themeId) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -56,14 +64,14 @@ export default function SettingsModal({ onClose }) {
   const activeThemeObj = THEMES.find(t => t.id === activeThemeId) || THEMES[0];
 
   return createPortal(
-    <div className="settings-overlay fade-in" onClick={onClose}>
-      <div className="settings-modal pop-in" onClick={e => e.stopPropagation()}>
+    <div className={`settings-overlay ${isClosing ? 'ui-overlay-exit' : 'ui-overlay-enter'}`} onClick={handleClose}>
+      <div className={`settings-modal ${isClosing ? 'ui-modal-exit' : 'ui-modal-enter'}`} onClick={e => e.stopPropagation()}>
         <div className="settings-header">
           <div className="header-title">
             <ImageIcon size={24} className="header-icon" />
             <h2>Custom Themes</h2>
           </div>
-          <button className="settings-close-btn" onClick={onClose}><X size={20} /></button>
+          <button className="settings-close-btn" onClick={handleClose}><X size={20} /></button>
         </div>
 
         <div className="settings-layout">

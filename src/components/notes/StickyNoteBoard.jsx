@@ -75,6 +75,7 @@ export default function StickyNoteBoard() {
   const [showStudyDesk, setShowStudyDesk] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [closingNotes, setClosingNotes] = useState([]);
   const [user, setUser] = useState(null);
 
   React.useEffect(() => {
@@ -154,11 +155,15 @@ export default function StickyNoteBoard() {
   };
 
   const deleteNote = (id) => {
-    delete posRef.current[id];
-    delete noteRefs.current[id];
-    setNotes(prev => prev.filter(n => n.id !== id));
-    setActivePopup(null);
-    setClosingPopup(false);
+    setClosingNotes(prev => [...prev, id]);
+    setTimeout(() => {
+      delete posRef.current[id];
+      delete noteRefs.current[id];
+      setNotes(prev => prev.filter(n => n.id !== id));
+      setClosingNotes(prev => prev.filter(nId => nId !== id));
+      setActivePopup(null);
+      setClosingPopup(false);
+    }, 200);
   };
 
   const deleteAllNotes = () => {
@@ -354,7 +359,7 @@ export default function StickyNoteBoard() {
         <div
           key={note.id}
           ref={el => { if (el) noteRefs.current[note.id] = el; }}
-          className={`sticky-note${note.isPinned ? ' pinned' : ''}`}
+          className={`sticky-note${note.isPinned ? ' pinned' : ''} ${closingNotes.includes(note.id) ? 'ui-modal-exit' : 'ui-modal-enter'}`}
           style={{
             left: note.x,
             top: note.y,
