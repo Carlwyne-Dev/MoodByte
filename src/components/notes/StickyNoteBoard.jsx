@@ -901,7 +901,8 @@ export default function StickyNoteBoard() {
           padding: 8px 10px;
           display: flex;
           flex-direction: column;
-          height: 100%;
+          height: calc(100% - 28px);
+          box-sizing: border-box;
           color: rgba(0,0,0,0.85);
           cursor: default;
         }
