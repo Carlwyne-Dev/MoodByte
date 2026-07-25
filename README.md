@@ -28,6 +28,7 @@ Everything is designed around one goal:
 - **Live UI Preview** — See a real-time glassmorphism preview of how your wallpaper looks behind MoodByte's UI before committing to it.
 - **Automatic Background Rotation** — MoodByte cycles through both built-in and your custom backgrounds automatically.
 - **Mood-Based Theme Suggestions** — After logging your mood, MoodByte suggests a matching theme and lets you switch with one click.
+- **Zen Mode** — When the sidebar is hidden, a small Eye button appears in the top-right corner. Click it to instantly fade out all UI elements, leaving nothing but the animated background. Click again to restore everything. Perfect for using MoodByte as a pure ambient wallpaper.
 
 ### Live Clock
 
@@ -68,7 +69,10 @@ Everything is designed around one goal:
 ### Music Player
 
 - **Local Music** — Load MP3 files directly from your device and play them in-app.
-- **Spotify Integration** — Paste a Spotify playlist/album link and open it directly.
+- **Spotify Integration** — Paste a Spotify playlist/album/track link and open it directly inside MoodByte.
+  - **Recent Links** — Your last 5 Spotify links are saved for quick re-loading.
+  - **Inline Renaming** — Hover any saved link to reveal an "Edit" button. Click it to rename the entry inline (e.g. rename a cryptic ID to "Lofi Study Mix"). Saves on Enter or the Done button.
+  - **Smart Load Button** — The Load button only appears once you start typing or paste a link, keeping the input area clean.
 - Playback controls: play, pause, previous, next, and track progress display.
 
 ### FM Radio
@@ -92,6 +96,8 @@ Turn the dial and tune into curated 24/7 ambient stations inspired by classic FM
 - Add, complete, and delete tasks.
 - Completed tasks are moved to a task history archive.
 - Task completion counts toward your streak and achievements.
+- **Due Dates** — Assign calendar dates to individual tasks.
+- **Scrollbar Polish** — The task list scrollbar is hidden by default and only appears on hover for a cleaner look.
 
 ### Stats & Analytics
 
