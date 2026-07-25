@@ -77,7 +77,6 @@ function BackgroundManager({ bgImage }) {
       {layers.length > 0 && isLoading && (
         <div className="bg-loading-indicator fade-in">
           <Loader2 size={16} className="spin-slow" />
-          <span>Loading Theme...</span>
         </div>
       )}
     </div>
