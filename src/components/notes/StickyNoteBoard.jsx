@@ -296,13 +296,13 @@ export default function StickyNoteBoard() {
           <SettingsIcon size={18} />
           <span className="stats-label">Settings</span>
         </button>
-        <button className="stats-btn" onClick={(e) => { e.stopPropagation(); setShowSettings(true); }} title="Custom Themes">
-          <ImageIcon size={18} />
-          <span className="stats-label">Themes</span>
-        </button>
         <button className="stats-btn" onClick={(e) => { e.stopPropagation(); setShowStats(true); }} title="Your Stats">
           <BarChart2 size={18} />
           <span className="stats-label">Stats</span>
+        </button>
+        <button className="stats-btn" onClick={(e) => { e.stopPropagation(); setShowSettings(true); }} title="Custom Themes">
+          <ImageIcon size={18} />
+          <span className="stats-label">Themes</span>
         </button>
         <button className="stats-btn" onClick={(e) => { e.stopPropagation(); setShowCalendar(true); }} title="Calendar">
           <CalendarIcon size={18} />

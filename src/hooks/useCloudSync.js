@@ -25,11 +25,25 @@ const SYNC_KEYS = [
   'spotify_history'
 ];
 
+const LOCAL_TS_KEY = 'moodbyte_local_last_modified';
+
+function getLocalTimestamp() {
+  return parseInt(localStorage.getItem(LOCAL_TS_KEY) || '0', 10);
+}
+
+function bumpLocalTimestamp() {
+  const ts = Date.now();
+  localStorage.setItem(LOCAL_TS_KEY, String(ts));
+  return ts;
+}
+
 export function useCloudSync() {
   const [user, setUser] = useState(null);
-  const [syncStatus, setSyncStatus] = useState('idle'); // idle, syncing, success, error
+  const [syncStatus, setSyncStatus] = useState('idle');
   const [lastSyncTime, setLastSyncTime] = useState(null);
   const syncTimeoutRef = useRef(null);
+  // Track when we're applying cloud data so we don't re-push it
+  const applyingCloudRef = useRef(false);
 
   // 1. Listen for Auth State
   useEffect(() => {
@@ -40,7 +54,6 @@ export function useCloudSync() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
       if (event === 'SIGNED_IN') {
-        // If they just logged in, this flag was set right before the redirect.
         if (sessionStorage.getItem('moodbyte_expecting_login')) {
           sessionStorage.removeItem('moodbyte_expecting_login');
           window.dispatchEvent(new CustomEvent('sync-toast', { detail: 'Cloud Sync Activated!' }));
@@ -51,28 +64,36 @@ export function useCloudSync() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // 2. Initial Pull on Login
+  // 2. Initial Pull on Login — only apply if cloud is newer than local
   useEffect(() => {
     if (user) {
-      pullFromCloud();
+      pullFromCloud({ onlyIfNewer: true });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // 3. Listen for Local Changes and Push to Cloud
+  // 3. Listen for Local Changes → bump timestamp → push to cloud (debounced)
   useEffect(() => {
     if (!user) return;
 
     const handleLocalChange = (e) => {
-      if (e.detail?.fromCloud) return; // Don't push to cloud if the change came from the cloud!
+      // Ignore changes that came from cloud application
+      if (applyingCloudRef.current) return;
+      if (e.detail?.fromCloud) return;
 
-      if (e.detail && typeof e.detail.key === 'string' && (SYNC_KEYS.includes(e.detail.key) || e.detail.key.startsWith('moodbyte_'))) {
-        // Debounce cloud push by 3 seconds
-        if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+      if (e.detail && typeof e.detail.key === 'string' &&
+          (SYNC_KEYS.includes(e.detail.key) || e.detail.key.startsWith('moodbyte_'))) {
         
+        // Bump local timestamp so we know local is now the "latest"
+        bumpLocalTimestamp();
+
+        // Debounce cloud push slightly (500ms) to avoid spamming the network on every keystroke,
+        // but fast enough to feel instant. Local save is already instantaneous.
+        if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
         setSyncStatus('syncing');
         syncTimeoutRef.current = setTimeout(() => {
           pushToCloud();
-        }, 3000);
+        }, 500);
       }
     };
 
@@ -80,7 +101,7 @@ export function useCloudSync() {
     return () => window.removeEventListener('local-storage', handleLocalChange);
   }, [user]);
 
-  // 4. Listen for Real-time Cloud Updates
+  // 4. Listen for Real-time Cloud Updates — only apply if cloud is newer
   useEffect(() => {
     if (!user) return;
 
@@ -90,19 +111,29 @@ export function useCloudSync() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'user_sync_data', filter: `user_id=eq.${user.id}` },
         (payload) => {
+          const cloudUpdatedAt = payload.new?.updated_at
+            ? new Date(payload.new.updated_at).getTime()
+            : 0;
+          const localTs = getLocalTimestamp();
+
+          // Only apply cloud update if cloud data is strictly newer
+          if (cloudUpdatedAt <= localTs) return;
+
           const newData = payload.new?.data;
           if (newData) {
+            applyingCloudRef.current = true;
             Object.entries(newData).forEach(([key, value]) => {
               if (SYNC_KEYS.includes(key) || key.startsWith('moodbyte_')) {
                 const localStr = window.localStorage.getItem(key);
                 const newStr = JSON.stringify(value);
-                // Only update and dispatch if there is an actual change
                 if (localStr !== newStr) {
                   window.localStorage.setItem(key, newStr);
                   window.dispatchEvent(new CustomEvent('local-storage', { detail: { key, value, fromCloud: true } }));
                 }
               }
             });
+            applyingCloudRef.current = false;
+
             if (payload.new.updated_at) {
               setLastSyncTime(new Date(payload.new.updated_at));
             }
@@ -116,7 +147,7 @@ export function useCloudSync() {
     };
   }, [user]);
 
-  const pullFromCloud = async () => {
+  const pullFromCloud = async ({ onlyIfNewer = false } = {}) => {
     try {
       setSyncStatus('syncing');
       const { data, error } = await supabase
@@ -125,28 +156,37 @@ export function useCloudSync() {
         .eq('user_id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "No rows found"
+      if (error && error.code !== 'PGRST116') {
         throw error;
       }
 
       if (data && data.data) {
+        const cloudTs = data.updated_at ? new Date(data.updated_at).getTime() : 0;
+        const localTs = getLocalTimestamp();
+
+        // If local is newer (user made changes since last cloud write), skip pull
+        if (onlyIfNewer && localTs > cloudTs) {
+          setSyncStatus('success');
+          // Push our newer local data up instead
+          pushToCloud();
+          return;
+        }
+
         const cloudData = data.data;
-        let appliedAny = false;
-        
-        // Apply cloud data to local storage
+        applyingCloudRef.current = true;
         Object.entries(cloudData).forEach(([key, value]) => {
           if (SYNC_KEYS.includes(key) || key.startsWith('moodbyte_')) {
             window.localStorage.setItem(key, JSON.stringify(value));
             window.dispatchEvent(new CustomEvent('local-storage', { detail: { key, value, fromCloud: true } }));
-            appliedAny = true;
           }
         });
-        
+        applyingCloudRef.current = false;
+
         if (data.updated_at) {
           setLastSyncTime(new Date(data.updated_at));
         }
       } else {
-        // If no cloud data exists yet, push our local data to start
+        // No cloud data yet — push local data to bootstrap the cloud
         pushToCloud();
       }
 
@@ -159,11 +199,10 @@ export function useCloudSync() {
 
   const pushToCloud = async () => {
     if (!user) return;
-    
+
     try {
       setSyncStatus('syncing');
-      
-      // Gather all local data
+
       const localData = {};
       for (let i = 0; i < window.localStorage.length; i++) {
         const key = window.localStorage.key(i);
@@ -185,7 +224,7 @@ export function useCloudSync() {
         });
 
       if (error) throw error;
-      
+
       setLastSyncTime(new Date());
       setSyncStatus('success');
     } catch (err) {
