@@ -13,6 +13,7 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
   const [position, setPosition] = useState({ x: 50, y: 150 });
   const [isDragging, setIsDragging] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [isPopupClosing, setIsPopupClosing] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const widgetRef = useRef(null);
 
@@ -65,13 +66,21 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
   const today = new Date();
   const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
 
+  const closePopup = () => {
+    setIsPopupClosing(true);
+    setTimeout(() => {
+      setSelectedDay(null);
+      setNoteInput('');
+      setTaskInput('');
+      setIsPopupClosing(false);
+    }, 200);
+  };
+
   const handleDayClick = (d, e) => {
     if (!d) return;
     const key = getDayKey(year, month, d);
     if (selectedDay?.key === key) {
-      setSelectedDay(null);
-      setNoteInput('');
-      setTaskInput('');
+      closePopup();
       return;
     }
     // Position popup to the right of the widget (or left if inline/sidebar)
@@ -158,9 +167,7 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
     if (!selectedDay) return;
     const handle = (e) => {
       if (!e.target.closest('.cal-day-popup') && !e.target.closest('.cal-day.active')) {
-        setSelectedDay(null);
-        setNoteInput('');
-        setTaskInput('');
+        closePopup();
       }
     };
     document.addEventListener('mousedown', handle);
@@ -259,9 +266,9 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
       </div>
 
       {/* Day popup — rendered in portal so it floats freely */}
-      {selectedDay && createPortal(
+      {(selectedDay || isPopupClosing) && selectedDay && createPortal(
         <div
-          className={`cal-day-popup ${inlineMode ? 'popup-left' : 'popup-right'}`}
+          className={`cal-day-popup ${inlineMode ? 'popup-left' : 'popup-right'} ${isPopupClosing ? 'ui-modal-exit' : 'ui-modal-enter'}`}
           style={{ top: `${selectedDay.popupTop}px`, left: `${selectedDay.popupLeft}px` }}
         >
           {/* Tail arrow */}
@@ -270,7 +277,7 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
           {/* Header */}
           <div className="cal-popup-header">
             <span className="cal-popup-date font-pixel">{formatSelectedDate(selectedDay)}</span>
-            <button className="cal-popup-close" onClick={() => { setSelectedDay(null); setNoteInput(''); setTaskInput(''); }}>
+            <button className="cal-popup-close" onClick={closePopup}>
               <X size={12} />
             </button>
           </div>
