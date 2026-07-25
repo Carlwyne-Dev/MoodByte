@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Play, Pause, SkipBack, SkipForward, Shuffle, Repeat,
-  Volume2, VolumeX, Plus, Trash2, Music2, X, ChevronDown, ChevronUp, GripVertical, Maximize2, MoreHorizontal
+  Volume2, VolumeX, Plus, Trash2, Music2, X, ChevronDown, ChevronUp, GripVertical, Maximize2, MoreHorizontal, Edit2, Check
 } from 'lucide-react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { saveTrackBlob, getTrackBlob, deleteTrackBlob } from '../../hooks/useAudioStorage';
@@ -44,8 +44,9 @@ export default function Player({ isMobile = false }) {
   const [spotifyHistory, setSpotifyHistory] = useLocalStorage('spotify_history', []);
   const [showSpotifyConfirm, setShowSpotifyConfirm] = useState(false);
   const [showMobileOptions, setShowMobileOptions] = useState(false);
-  const [popupPos, setPopupPos] = useState({ top: 0, left: 0 });
   const [isOverflowing, setIsOverflowing] = useState(false);
+  const [editingHistoryIdx, setEditingHistoryIdx] = useState(null);
+  const [editingHistoryVal, setEditingHistoryVal] = useState('');
   // blobUrls: map of id -> object URL (rebuilt each session from IndexedDB)
   const [blobUrls, setBlobUrls] = useState({});
   
@@ -393,8 +394,18 @@ export default function Player({ isMobile = false }) {
       
       // Save to history (max 5)
       setSpotifyHistory(prev => {
-        const withoutCurrent = prev.filter(h => h !== urlStr);
-        return [urlStr, ...withoutCurrent].slice(0, 5);
+        const urlStrNormalized = urlStr;
+        const existing = prev.find(h => (typeof h === 'string' ? h : h.url) === urlStrNormalized);
+        const withoutCurrent = prev.filter(h => (typeof h === 'string' ? h : h.url) !== urlStrNormalized);
+        
+        let newItem;
+        if (existing && typeof existing === 'object') {
+          newItem = existing;
+        } else {
+          newItem = { url: urlStrNormalized, label: urlStrNormalized.replace('https://open.spotify.com/', '').split('?')[0] };
+        }
+        
+        return [newItem, ...withoutCurrent].slice(0, 5);
       });
     } catch {
       alert('Please paste a valid Spotify link (e.g., https://open.spotify.com/track/...)');
@@ -562,7 +573,9 @@ export default function Player({ isMobile = false }) {
               className="spotify-input"
               autoFocus
             />
-            <button className="go-btn" onClick={() => loadSpotify()}>Load</button>
+            {spotifyUrl.trim() !== '' && (
+              <button className="go-btn" onClick={() => loadSpotify()}>Load</button>
+            )}
           </div>
           <p className="spotify-hint">Paste a track, album, or playlist link</p>
           
@@ -570,11 +583,59 @@ export default function Player({ isMobile = false }) {
             <div className="spotify-history">
               <span className="history-label">Recent Links</span>
               <div className="history-list">
-                {spotifyHistory.map((link, i) => (
-                  <button key={i} className="history-item" onClick={() => loadSpotify(link)}>
-                    {link.replace('https://open.spotify.com/', '').split('?')[0]}
-                  </button>
-                ))}
+                {spotifyHistory.map((item, i) => {
+                  const url = typeof item === 'string' ? item : item.url;
+                  const label = typeof item === 'string' ? item.replace('https://open.spotify.com/', '').split('?')[0] : item.label;
+                  const isEditing = editingHistoryIdx === i;
+                  
+                  const saveEdit = () => {
+                    if (editingHistoryVal.trim()) {
+                      setSpotifyHistory(prev => {
+                        const clone = [...prev];
+                        clone[i] = { url, label: editingHistoryVal.trim() };
+                        return clone;
+                      });
+                    }
+                    setEditingHistoryIdx(null);
+                  };
+
+                  return (
+                    <div key={i} className="history-item-wrap">
+                      {isEditing ? (
+                        <input
+                          autoFocus
+                          className="history-edit-input"
+                          placeholder={label}
+                          value={editingHistoryVal}
+                          onChange={e => setEditingHistoryVal(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') saveEdit();
+                            else if (e.key === 'Escape') setEditingHistoryIdx(null);
+                          }}
+                          onBlur={() => setEditingHistoryIdx(null)}
+                        />
+                      ) : (
+                        <div className="history-item-content" onClick={() => loadSpotify(url)}>
+                          {label}
+                        </div>
+                      )}
+                      <button 
+                        className={`history-btn ${isEditing ? 'editing' : ''}`}
+                        onMouseDown={e => e.preventDefault()} // prevent blur so click works
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isEditing) saveEdit();
+                          else {
+                            setEditingHistoryIdx(i);
+                            setEditingHistoryVal('');
+                          }
+                        }}
+                      >
+                        {isEditing ? 'Done' : 'Edit'}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -912,23 +973,68 @@ export default function Player({ isMobile = false }) {
           flex-direction: column;
           gap: 6px;
         }
-        .history-item {
+        .history-item-wrap {
+          display: flex;
+          align-items: center;
           background: rgba(255,255,255,0.03);
           border: 1px solid rgba(255,255,255,0.05);
-          color: var(--text-light);
-          padding: 8px 12px;
           border-radius: 6px;
+          transition: all 0.2s;
+          position: relative;
+          overflow: hidden;
+        }
+        .history-item-wrap:hover {
+          background: rgba(255,255,255,0.08);
+          border-color: var(--primary);
+        }
+        .history-item-content {
+          flex: 1;
+          padding: 8px 12px;
+          color: var(--text-light);
           font-size: 0.8rem;
-          text-align: left;
           cursor: pointer;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          transition: all 0.2s;
         }
-        .history-item:hover {
-          background: rgba(255,255,255,0.08);
-          border-color: var(--primary);
+        .history-edit-input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          outline: none;
+          color: #fff;
+          font-family: 'Outfit', sans-serif;
+          font-size: 0.8rem;
+          padding: 8px 12px;
+        }
+        .history-btn {
+          position: absolute;
+          right: 4px;
+          top: 4px;
+          bottom: 4px;
+          background: var(--primary);
+          color: #fff;
+          border: none;
+          border-radius: 4px;
+          padding: 0 12px;
+          font-family: 'Outfit', sans-serif;
+          font-size: 0.75rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          opacity: 0;
+          pointer-events: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .history-btn:hover {
+          transform: translateY(-1px);
+        }
+        .history-item-wrap:hover .history-btn,
+        .history-btn.editing {
+          opacity: 1;
+          pointer-events: auto;
         }
 
         .spotify-view {

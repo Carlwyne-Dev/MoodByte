@@ -515,11 +515,19 @@ export default function TaskList() {
           max-height: 242px; /* ~5 items × 44px + 4 gaps × 7px */
           overflow-y: auto;
           scrollbar-width: thin;
+          scrollbar-color: transparent transparent;
+          transition: scrollbar-color 0.3s ease;
+        }
+        .task-list:hover {
           scrollbar-color: rgba(168,85,247,0.3) transparent;
         }
         .task-list::-webkit-scrollbar { width: 3px; }
-        .task-list::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.3); border-radius: 2px; }
-
+        .task-list::-webkit-scrollbar-thumb {
+          background: transparent;
+          border-radius: 2px;
+          transition: background 0.3s ease;
+        }
+        .task-list:hover::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.3); }
 
         /* Empty state */
         .empty-state {

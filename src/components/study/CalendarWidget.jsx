@@ -268,7 +268,7 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
       {/* Day popup — rendered in portal so it floats freely */}
       {(selectedDay || isPopupClosing) && selectedDay && createPortal(
         <div
-          className={`cal-day-popup ${inlineMode ? 'popup-left' : 'popup-right'} ${isPopupClosing ? 'ui-modal-exit' : 'ui-modal-enter'}`}
+          className={`cal-day-popup ${inlineMode ? 'popup-left' : 'popup-right'} ${isPopupClosing ? 'cal-popup-exit' : 'cal-popup-enter'}`}
           style={{ top: `${selectedDay.popupTop}px`, left: `${selectedDay.popupLeft}px` }}
         >
           {/* Tail arrow */}
@@ -478,12 +478,22 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
           border-radius: 14px;
           box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
           z-index: 99999;
-          overflow: hidden;
-          animation: calPopIn 0.2s cubic-bezier(0.34,1.56,0.64,1);
+          display: flex;
+          flex-direction: column;
+        }
+        .cal-popup-enter {
+          animation: calPopIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        .cal-popup-exit {
+          animation: calPopOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
         @keyframes calPopIn {
-          from { opacity: 0; transform: translateY(-50%) scale(0.92); }
-          to   { opacity: 1; transform: translateY(-50%) scale(1); }
+          0% { opacity: 0; transform: translateY(-50%) scale(0.9); margin-top: 10px; }
+          100% { opacity: 1; transform: translateY(-50%) scale(1); margin-top: 0px; }
+        }
+        @keyframes calPopOut {
+          0% { opacity: 1; transform: translateY(-50%) scale(1); margin-top: 0px; }
+          100% { opacity: 0; transform: translateY(-50%) scale(0.9); margin-top: 10px; }
         }
 
         /* Arrow tail */

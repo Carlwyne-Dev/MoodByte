@@ -18,7 +18,7 @@ import { useCloudSync } from './hooks/useCloudSync';
 import SyncToast from './components/settings/SyncToast';
 import MobileLayout from './components/mobile/MobileLayout';
 
-import { Moon, CloudRain, Wind, Zap, ChevronRight, ChevronLeft, Palette, Music2, Timer as TimerIcon, CheckSquare, Smile, Loader2 } from 'lucide-react';
+import { Moon, CloudRain, Wind, Zap, ChevronRight, ChevronLeft, Palette, Music2, Timer as TimerIcon, CheckSquare, Smile, Loader2, Eye, EyeOff } from 'lucide-react';
 
 const THEMES = [
   { id: 'night',      label: 'Night',      Icon: Moon,      color: '#a855f7' }, // Purple
@@ -90,6 +90,7 @@ function App() {
   const isMobile = useIsMobile();
   const [minimized, setMinimized] = React.useState({});
   const [sidebarHidden, setSidebarHidden] = React.useState(false);
+  const [zenMode, setZenMode] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(() => {
     return !sessionStorage.getItem('moodbyte_session_started');
   });
@@ -176,7 +177,7 @@ function App() {
   );
 
   return (
-    <div className="app-container" style={{ '--sidebar-offset': sidebarHidden ? '40px' : '360px' }}>
+    <div className={`app-container ${zenMode ? 'zen-mode-active' : ''}`} style={{ '--sidebar-offset': sidebarHidden ? '40px' : '360px' }}>
       <SyncToast />
       <AchievementManager />
       <StreakCounter />
@@ -206,7 +207,10 @@ function App() {
         {/* Toggle Button */}
         <button 
           className="sidebar-toggle-btn"
-          onClick={() => setSidebarHidden(!sidebarHidden)}
+          onClick={() => {
+             setSidebarHidden(!sidebarHidden);
+             if (!sidebarHidden) setZenMode(false); // disable zen mode when sidebar is shown
+          }}
           title={sidebarHidden ? "Show Sidebar" : "Hide Sidebar"}
         >
           {sidebarHidden ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
@@ -700,8 +704,7 @@ function App() {
           border-color: var(--primary);
           color: #fff;
         }
-
-        @keyframes fadeIn {
+        @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
         }
@@ -710,8 +713,18 @@ function App() {
           from { opacity: 0; transform: translateY(20px) scale(0.97); }
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
-
       `}</style>
+      
+      {/* Zen Toggle Button */}
+      {!isMobile && (
+        <button 
+          className={`zen-toggle-btn ${sidebarHidden ? 'visible' : 'hidden'}`}
+          onClick={() => setZenMode(!zenMode)}
+          title={zenMode ? "Exit Zen Mode" : "Enter Zen Mode"}
+        >
+          {zenMode ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      )}
     </div>
   );
 }

@@ -233,3 +233,56 @@ button {
   0% { opacity: 1; scale: 1; margin-top: 0px; }
   100% { opacity: 0; scale: 0.9; margin-top: 15px; }
 }
+
+/* ── Zen Mode ────────────────────────────── */
+.app-container > *:not(.bg-manager) {
+  transition: opacity 0.5s ease;
+}
+
+.app-container.zen-mode-active > *:not(.bg-manager):not(.zen-toggle-btn) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.zen-toggle-btn {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.3);
+}
+
+.zen-toggle-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.zen-toggle-btn.visible:hover {
+  background: rgba(15, 23, 42, 0.75);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: scale(1.2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  /* springy hover-in */
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease;
+}

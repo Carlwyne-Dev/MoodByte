@@ -919,9 +919,15 @@ export default function StickyNoteBoard() {
           gap: 6px;
           overflow-y: auto;
           flex: 1;
+          scrollbar-width: thin;
+          scrollbar-color: transparent transparent;
+        }
+        .task-sync-list:hover {
+          scrollbar-color: rgba(0,0,0,0.2) transparent;
         }
         .task-sync-list::-webkit-scrollbar { width: 4px; }
-        .task-sync-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+        .task-sync-list::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; transition: background 0.3s ease; }
+        .task-sync-list:hover::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); }
         .task-sync-empty {
           color: rgba(0,0,0,0.4);
           font-style: italic;
