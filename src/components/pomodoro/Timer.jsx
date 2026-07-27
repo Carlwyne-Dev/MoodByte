@@ -1,20 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { Play, Pause, RotateCcw, Clock, Infinity as InfinityIcon } from 'lucide-react';
 
+const getTimestamp = () => Date.now();
+
 export default function Timer() {
-  const [stats, setStats] = useLocalStorage('pomodoroStats', { sessions: 0 });
+  const [, setStats] = useLocalStorage('pomodoroStats', { sessions: 0 });
   const [mode, setMode] = useState('work'); // work, fastStudy, shortBreak, custom
   const [customMins, setCustomMins] = useLocalStorage('pomodoroCustom', 45);
+  const safeCustomMins = Math.min(999, Math.max(1, parseInt(customMins, 10) || 45));
   
-  const modes = {
+  const modes = useMemo(() => ({
     work: { label: 'Focus', minutes: 25 },
     fastStudy: { label: 'Sprint', minutes: 15 },
     shortBreak: { label: 'Break', minutes: 5 },
     free: { label: 'Free Track', minutes: 0 },
-    custom: { label: 'Custom', minutes: customMins }
-  };
+    custom: { label: 'Custom', minutes: safeCustomMins }
+  }), [safeCustomMins]);
 
   const [timeElapsed, setTimeElapsed] = useState(0); // we will track elapsed time always, and compute display
   const [isRunning, setIsRunning] = useState(false);
@@ -22,28 +25,83 @@ export default function Timer() {
   const [inputValue, setInputValue] = useState(customMins.toString());
   const [isRinging, setIsRinging] = useState(false);
   const audioRef = useRef(null);
+  const runStartedAtRef = useRef(null);
+  const elapsedBeforeRunRef = useRef(0);
+  const alarmTriggeredRef = useRef(false);
+  const targetSeconds = mode === 'free' ? Infinity : modes[mode].minutes * 60;
+
+  const getCurrentElapsed = useCallback(() => {
+    if (!isRunning || !runStartedAtRef.current) return timeElapsed;
+    const runningSeconds = Math.floor((getTimestamp() - runStartedAtRef.current) / 1000);
+    return elapsedBeforeRunRef.current + runningSeconds;
+  }, [isRunning, timeElapsed]);
+
+  const finishTimer = useCallback(() => {
+    if (alarmTriggeredRef.current) return;
+
+    alarmTriggeredRef.current = true;
+    runStartedAtRef.current = null;
+    elapsedBeforeRunRef.current = targetSeconds;
+    setTimeElapsed(targetSeconds);
+    setIsRunning(false);
+    audioRef.current = new Audio('/alarm.mp3');
+    audioRef.current.loop = true;
+    audioRef.current.play().catch(e => console.log('Audio play failed:', e));
+    setIsRinging(true);
+
+    if (mode === 'work') {
+      setStats(prev => ({ ...prev, sessions: (prev.sessions || 0) + 1 }));
+    }
+  }, [mode, setStats, targetSeconds]);
 
   useEffect(() => {
-    let interval;
-    const targetSeconds = mode === 'free' ? Infinity : modes[mode].minutes * 60;
-    
-    if (isRunning && timeElapsed < targetSeconds) {
-      interval = setInterval(() => setTimeElapsed(t => t + 1), 1000);
-    } else if (isRunning && timeElapsed >= targetSeconds && mode !== 'free') {
-      setIsRunning(false);
-      audioRef.current = new Audio('/alarm.mp3');
-      audioRef.current.loop = true;
-      audioRef.current.play().catch(e => console.log('Audio play failed:', e));
-      setIsRinging(true);
-      
-      if (mode === 'work') {
-        setStats({ sessions: stats.sessions + 1 });
-      }
-    }
-    return () => clearInterval(interval);
-  }, [isRunning, timeElapsed, mode, stats, setStats, customMins]);
+    if (!isRunning) return;
 
-  const toggleTimer = () => setIsRunning(!isRunning);
+    const syncElapsed = () => {
+      const nextElapsed = getCurrentElapsed();
+
+      if (mode === 'free') {
+        setTimeElapsed(nextElapsed);
+        return;
+      }
+
+      setTimeElapsed(Math.min(nextElapsed, targetSeconds));
+
+      if (nextElapsed >= targetSeconds) {
+        finishTimer();
+      }
+    };
+
+    const tickTimer = setInterval(syncElapsed, 250);
+    const handleVisibilityChange = () => syncElapsed();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(tickTimer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [finishTimer, getCurrentElapsed, isRunning, mode, targetSeconds]);
+
+  const toggleTimer = () => {
+    if (isEditing) {
+      const saved = saveCustomMins();
+      if (!saved) return;
+    }
+
+    if (isRunning) {
+      const currentElapsed = getCurrentElapsed();
+      elapsedBeforeRunRef.current = currentElapsed;
+      runStartedAtRef.current = null;
+      setTimeElapsed(currentElapsed);
+      setIsRunning(false);
+      return;
+    }
+
+    alarmTriggeredRef.current = false;
+    elapsedBeforeRunRef.current = timeElapsed;
+    runStartedAtRef.current = getTimestamp();
+    setIsRunning(true);
+  };
   
   const dismissAlarm = () => {
     setIsRinging(false);
@@ -55,6 +113,9 @@ export default function Timer() {
 
   const resetTimer = () => { 
     setIsRunning(false); 
+    runStartedAtRef.current = null;
+    elapsedBeforeRunRef.current = 0;
+    alarmTriggeredRef.current = false;
     setTimeElapsed(0); 
   };
   
@@ -62,7 +123,21 @@ export default function Timer() {
     setMode(newMode); 
     setIsRunning(false); 
     setIsEditing(false);
+    runStartedAtRef.current = null;
+    elapsedBeforeRunRef.current = 0;
+    alarmTriggeredRef.current = false;
     setTimeElapsed(0); 
+  };
+
+  const startCustomEdit = () => {
+    setIsRunning(false);
+    runStartedAtRef.current = null;
+    elapsedBeforeRunRef.current = 0;
+    alarmTriggeredRef.current = false;
+    setInputValue(safeCustomMins.toString());
+    setMode('custom');
+    setTimeElapsed(0);
+    setIsEditing(true);
   };
 
   const handleCustomChange = (e) => {
@@ -85,13 +160,18 @@ export default function Timer() {
   const saveCustomMins = () => {
     const parsed = parseInt(inputValue, 10);
     if (!isNaN(parsed) && parsed > 0) {
-      setCustomMins(parsed);
+      setCustomMins(Math.min(999, parsed));
       setTimeElapsed(0);
+      elapsedBeforeRunRef.current = 0;
+      alarmTriggeredRef.current = false;
       setMode('custom');
+      setIsEditing(false);
+      return true;
     } else {
-      setInputValue(customMins.toString()); // revert
+      setInputValue(safeCustomMins.toString()); // revert
+      setIsEditing(false);
+      return false;
     }
-    setIsEditing(false);
   };
 
   const formatTime = (seconds) => {
@@ -139,7 +219,7 @@ export default function Timer() {
             <span className="min-label">min</span>
           </div>
         ) : (
-          <div className="time-text font-pixel" onClick={() => !isRunning && setIsEditing(true)}>
+          <div className="time-text font-pixel" onClick={() => !isRunning && startCustomEdit()}>
             {formatTime(displayTime)}
           </div>
         )}
@@ -157,7 +237,7 @@ export default function Timer() {
         <button className="sec-btn" onClick={resetTimer} title="Reset">
           <RotateCcw size={14} /> Reset
         </button>
-        <button className={`sec-btn ${mode === 'custom' && !isEditing ? 'active' : ''}`} onClick={() => setIsEditing(true)}>
+        <button className={`sec-btn ${mode === 'custom' && !isEditing ? 'active' : ''}`} onClick={startCustomEdit}>
           <Clock size={14} /> Custom
         </button>
         <button className={`sec-btn icon-only ${mode === 'free' ? 'active' : ''}`} onClick={() => switchMode('free')} title="Free tracking mode">
