@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Sparkles, X, Quote } from 'lucide-react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
@@ -39,6 +39,7 @@ const MOTIVATIONAL_QUOTES = [
 
 export default function DailyQuoteWidget() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalQuote, setModalQuote] = useState(null);
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
   const widgetRef = useRef(null);
   const [dailyQuote, setDailyQuote] = useLocalStorage('moodbyte_dailyQuote', {
@@ -114,6 +115,7 @@ export default function DailyQuoteWidget() {
   }, [dailyQuote.date, setDailyQuote]);
 
   const handleCenterClick = () => {
+    setModalQuote({ text: displayQuote, author: displayAuthor });
     setIsModalOpen(true);
     if (!dailyQuote.isRead) {
       setDailyQuote(prev => ({ ...prev, isRead: true }));
@@ -164,8 +166,8 @@ export default function DailyQuoteWidget() {
             
             <div className="quote-content-wrapper">
               <Quote size={40} className="quote-mark" />
-              <h2 className="quote-text">"{displayQuote}"</h2>
-              <p className="quote-author">- {displayAuthor}</p>
+              <h2 className="quote-text">"{modalQuote?.text || displayQuote}"</h2>
+              <p className="quote-author">- {modalQuote?.author || displayAuthor}</p>
             </div>
           </div>
         </div>,
@@ -415,11 +417,15 @@ export default function DailyQuoteWidget() {
           border-radius: 4px; /* Note-like corners */
           padding: 3rem 2.5rem;
           max-width: 500px;
+          min-height: 320px;
           width: 100%;
           position: relative;
           box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 25px rgba(255,255,255,0.2), inset 0 0 30px rgba(255,255,255,0.05);
           text-align: center;
           color: rgba(255,255,255,0.95);
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .quote-close-btn {
@@ -449,6 +455,7 @@ export default function DailyQuoteWidget() {
           flex-direction: column;
           align-items: center;
           gap: 1.5rem;
+          width: 100%;
         }
 
         .quote-mark {
