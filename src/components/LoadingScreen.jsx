@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const BG_URLS = [
   '/bg/night1.gif', '/bg/night2.gif', '/bg/night3.gif',
@@ -9,21 +9,32 @@ const BG_URLS = [
 
 export default function LoadingScreen({ onComplete, bgImage }) {
   const [isFading, setIsFading] = useState(false);
+  const onCompleteRef = useRef(onComplete);
+  const initialBgImageRef = useRef(bgImage || BG_URLS[0]);
 
   useEffect(() => {
-    let loaded = 0;
-    const total = BG_URLS.length;
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  useEffect(() => {
     let minTimeDone = false;
     let imagesDone = false;
+    let completed = false;
+    let fadeTimer;
 
-    const tryComplete = () => {
-      if (minTimeDone && imagesDone) {
+    const complete = () => {
+      if (!completed) {
+        completed = true;
         setIsFading(true);
-        setTimeout(() => {
+        fadeTimer = setTimeout(() => {
           window.dispatchEvent(new Event('app-ready'));
-          onComplete();
+          onCompleteRef.current();
         }, 800);
       }
+    };
+
+    const tryComplete = () => {
+      if (minTimeDone && imagesDone) complete();
     };
 
     // Only block the loading screen on the currently active background!
@@ -32,11 +43,11 @@ export default function LoadingScreen({ onComplete, bgImage }) {
       imagesDone = true;
       tryComplete();
     };
-    activeImg.src = bgImage || BG_URLS[0];
+    activeImg.src = initialBgImageRef.current;
 
     // Preload the rest silently in the background (does not block tryComplete)
     BG_URLS.forEach(url => {
-      if (url !== bgImage) {
+      if (url !== initialBgImageRef.current) {
         const img = new Image();
         img.src = url;
       }
@@ -48,8 +59,14 @@ export default function LoadingScreen({ onComplete, bgImage }) {
       tryComplete();
     }, 3000);
 
-    return () => clearTimeout(timer);
-  }, [onComplete]);
+    const fallbackTimer = setTimeout(complete, 6000);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(fallbackTimer);
+      clearTimeout(fadeTimer);
+    };
+  }, []);
 
   return (
     <div className={`loading-screen ${isFading ? 'fade-out' : ''}`}>
