@@ -15,6 +15,7 @@ import AboutModal from './components/settings/AboutModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useCloudSync } from './hooks/useCloudSync';
+import { useAnalytics } from './hooks/useAnalytics';
 import SyncToast from './components/settings/SyncToast';
 import MobileLayout from './components/mobile/MobileLayout';
 
@@ -86,6 +87,7 @@ function BackgroundManager({ bgImage }) {
 function App() {
   useCloudSync(); // Initialize cloud sync
   const { theme, bgImage, changeTheme } = useTheme();
+  useAnalytics(theme); // Silent visit tracking
   const isMobile = useIsMobile();
   const [minimized, setMinimized] = React.useState({});
   const [sidebarHidden, setSidebarHidden] = React.useState(false);
