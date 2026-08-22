@@ -1,5 +1,5 @@
 export const RADIO_CHANNELS = [
-  { id: 'lofi-hiphop', label: 'Lofi Hip Hop Radio', videoId: 'X4VbdwhkE10' },
+  { id: 'lofi-hiphop', label: 'Lofi Hip Hop Radio', videoId: 'jfKfPfyJRdk' },
   { id: 'synthwave', label: 'Synthwave Radio', videoId: '4xDzrJKXOOY' },
   { id: 'sleep-lofi', label: 'Sleep Lofi Radio', videoId: 'VAlMDl00mYY' },
   { id: 'sleep-ambient', label: 'Sleep Ambient Music', videoId: 'xORCbIptqcc' },
