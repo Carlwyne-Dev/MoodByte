@@ -92,6 +92,10 @@ export default function AdminDashboard() {
   const fetchStats = async () => {
     setRefreshing(true);
     try {
+      // Get admin's own user_id so we can exclude ourselves from all stats
+      const { data: { session: adminSession } } = await supabase.auth.getSession();
+      const adminUserId = adminSession?.user?.id;
+
       const { data: visits, error: vErr } = await supabase
         .from('page_visits')
         .select('session_id, user_id, theme, visited_at');
@@ -106,35 +110,39 @@ export default function AdminDashboard() {
       const day7ago = new Date(now - 7 * 24 * 60 * 60 * 1000);
       const day30ago = new Date(now - 30 * 24 * 60 * 60 * 1000);
 
-      const uniqueSessions = new Set(visits.map(v => v.session_id)).size;
-      const registeredVisits = visits.filter(v => v.user_id);
+      // Exclude admin's own visits from all counting
+      const nonAdminVisits = visits.filter(v => v.user_id !== adminUserId);
+
+      const uniqueSessions = new Set(nonAdminVisits.map(v => v.session_id)).size;
+      const registeredVisits = nonAdminVisits.filter(v => v.user_id);
       const uniqueRegistered = new Set(registeredVisits.map(v => v.user_id)).size;
-      const dau7 = new Set(visits.filter(v => new Date(v.visited_at) >= day7ago).map(v => v.session_id)).size;
-      const dau30 = new Set(visits.filter(v => new Date(v.visited_at) >= day30ago).map(v => v.session_id)).size;
+      const dau7 = new Set(nonAdminVisits.filter(v => new Date(v.visited_at) >= day7ago).map(v => v.session_id)).size;
+      const dau30 = new Set(nonAdminVisits.filter(v => new Date(v.visited_at) >= day30ago).map(v => v.session_id)).size;
 
       const themeCounts = {};
-      visits.forEach(v => {
+      nonAdminVisits.forEach(v => {
         const t = v.theme || 'unknown';
         themeCounts[t] = (themeCounts[t] || 0) + 1;
       });
       const topTheme = Object.entries(themeCounts).sort((a, b) => b[1] - a[1])[0];
 
+      // Exclude admin from sync rows (tasks/moods/user list)
+      const nonAdminSyncRows = (syncRows || []).filter(row => row.user_id !== adminUserId);
+
       let totalTasks = 0, totalMoods = 0;
-      (syncRows || []).forEach(row => {
+      nonAdminSyncRows.forEach(row => {
         const d = row.data || {};
-        // tasks[] is the main list; taskHistory is completed task archive — count both without overlap
         const activeTasks = Array.isArray(d.tasks) ? d.tasks.length : 0;
         const archivedTasks = Array.isArray(d.taskHistory) ? d.taskHistory.length : 0;
         totalTasks += activeTasks + archivedTasks;
-        // moodHistory is the key used in the app
         totalMoods += Array.isArray(d.moodHistory) ? d.moodHistory.length : 0;
       });
 
       const today = new Date().toDateString();
-      const todayVisits = visits.filter(v => new Date(v.visited_at).toDateString() === today).length;
+      const todayVisits = nonAdminVisits.filter(v => new Date(v.visited_at).toDateString() === today).length;
 
       setStats({
-        totalVisits: visits.length,
+        totalVisits: nonAdminVisits.length,
         uniqueVisitors: uniqueSessions,
         registeredUsers: uniqueRegistered,
         anonymousVisitors: uniqueSessions - uniqueRegistered,
@@ -145,7 +153,7 @@ export default function AdminDashboard() {
         themeCounts,
         totalTasks,
         totalMoods,
-        registeredUserList: syncRows || [],
+        registeredUserList: nonAdminSyncRows,
       });
     } catch (err) {
       console.error('Admin fetch error:', err);
