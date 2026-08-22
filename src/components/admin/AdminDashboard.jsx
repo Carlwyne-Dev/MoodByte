@@ -122,8 +122,12 @@ export default function AdminDashboard() {
       let totalTasks = 0, totalMoods = 0;
       (syncRows || []).forEach(row => {
         const d = row.data || {};
-        totalTasks += (d.taskHistory?.length || 0) + (d.tasks?.filter(t => t.completed)?.length || 0);
-        totalMoods += (d.moodHistory?.length || 0);
+        // tasks[] is the main list; taskHistory is completed task archive — count both without overlap
+        const activeTasks = Array.isArray(d.tasks) ? d.tasks.length : 0;
+        const archivedTasks = Array.isArray(d.taskHistory) ? d.taskHistory.length : 0;
+        totalTasks += activeTasks + archivedTasks;
+        // moodHistory is the key used in the app
+        totalMoods += Array.isArray(d.moodHistory) ? d.moodHistory.length : 0;
       });
 
       const today = new Date().toDateString();

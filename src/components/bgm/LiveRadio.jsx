@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Radio, Play, Pause, Activity } from 'lucide-react';
+import { Radio, Play, Pause, Activity, AlertTriangle } from 'lucide-react';
 import { RADIO_CHANNELS } from '../../config/radioChannels';
 
 export default function LiveRadio() {
@@ -11,6 +11,7 @@ export default function LiveRadio() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [popupPos, setPopupPos] = useState({ top: 0, left: 0 });
+  const [streamBroken, setStreamBroken] = useState(false);
   
   const containerRef = useRef(null);
   const buttonRef = useRef(null);
@@ -58,7 +59,7 @@ export default function LiveRadio() {
             if (event.data === window.YT.PlayerState.PLAYING) {
               if (window.stopLocalMusic) window.stopLocalMusic();
               setIsPlaying(true);
-              // Tell other audio sources to stop
+              setStreamBroken(false); // stream is alive
               window.dispatchEvent(new Event('radio-play'));
               tuningAudioRefs.current.forEach(audio => {
                 if (audio) {
@@ -69,6 +70,11 @@ export default function LiveRadio() {
             } else if (event.data === window.YT.PlayerState.PAUSED || event.data === window.YT.PlayerState.ENDED) {
               setIsPlaying(false);
             }
+          },
+          onError: () => {
+            // YouTube error codes: 2 = bad videoId, 5 = HTML5 error, 100 = video not found, 101/150 = embedding blocked
+            setStreamBroken(true);
+            setIsPlaying(false);
           }
         }
       });
@@ -131,6 +137,8 @@ export default function LiveRadio() {
     setIsPlaying(false);
   };
 
+  const hasLoadedRef = useRef(false);
+
   const togglePlay = (e) => {
     e.stopPropagation();
     if (!player || !isReady) return;
@@ -138,8 +146,14 @@ export default function LiveRadio() {
       player.pauseVideo();
     } else {
       if (window.stopLocalMusic) window.stopLocalMusic();
-      player.playVideo();
-      // Tell other audio sources to stop
+      // On first play, the player is initialized but the video isn't actually cued/loaded yet.
+      // We must call loadVideoById to actually start the stream.
+      if (!hasLoadedRef.current) {
+        hasLoadedRef.current = true;
+        player.loadVideoById(currentChannel.videoId);
+      } else {
+        player.playVideo();
+      }
       window.dispatchEvent(new Event('radio-play'));
     }
   };
@@ -149,6 +163,7 @@ export default function LiveRadio() {
     const channel = RADIO_CHANNELS.find(c => c.id === id);
     if (channel && player && isReady) {
       setCurrentChannelId(id);
+      setStreamBroken(false); // reset on channel switch
       player.loadVideoById(channel.videoId);
     }
   };
@@ -225,9 +240,17 @@ export default function LiveRadio() {
         className={`bgm-toggle-btn ${isPlaying ? 'active' : ''}`} 
         onClick={toggleDropdown} 
         title="Live Radio"
+        style={{ position: 'relative' }}
       >
         <Radio size={18} />
         <span className="bgm-label">FM Radio</span>
+        {streamBroken && (
+          <span style={{
+            position: 'absolute', top: '4px', right: '4px',
+            width: '8px', height: '8px', borderRadius: '50%',
+            background: '#f87171', boxShadow: '0 0 6px #f87171'
+          }} title="Stream broken!" />
+        )}
       </button>
 
       {/* Tuner Interface */}
@@ -252,6 +275,22 @@ export default function LiveRadio() {
                 ))}
               </div>
               <span className="tuner-title">{currentChannel.label}</span>
+              {streamBroken && (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '5px',
+                  fontSize: '0.68rem', color: 'rgba(248,113,113,0.9)', fontWeight: 600,
+                  background: 'rgba(15, 10, 20, 0.55)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(248,113,113,0.25)',
+                  borderRadius: '8px', padding: '3px 9px', marginLeft: '8px',
+                  whiteSpace: 'nowrap', letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                }}>
+                  <AlertTriangle size={10} strokeWidth={2.5} />
+                  Stream offline
+                </span>
+              )}
             </div>
           </div>
 
