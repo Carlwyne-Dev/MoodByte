@@ -365,7 +365,6 @@ export default function Timer() {
           position: fixed; inset: 0;
           background: rgba(0, 0, 0, 0.6);
           backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
           z-index: 10005;
           display: flex; align-items: center; justify-content: center;
         }

@@ -681,7 +681,6 @@ export default function TaskList() {
           width: 260px;
           background: rgba(30, 30, 35, 0.6);
           backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.15);
           border-radius: 16px;
           padding: 1.2rem;

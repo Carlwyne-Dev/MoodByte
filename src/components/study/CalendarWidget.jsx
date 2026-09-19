@@ -473,7 +473,6 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
           width: 240px;
           background: rgba(20, 27, 46, 0.92);
           backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
           border: 1px solid rgba(255,255,255,0.15);
           border-radius: 14px;
           box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);

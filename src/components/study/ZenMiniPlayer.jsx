@@ -59,7 +59,6 @@ export default function ZenMiniPlayer() {
         .zen-mini-player {
           background: rgba(15, 23, 42, 0.7);
           backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
           border: 1px solid rgba(255,255,255,0.08);
           border-radius: 20px;
           color: #fff;

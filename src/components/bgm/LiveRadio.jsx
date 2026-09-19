@@ -353,7 +353,6 @@ export default function LiveRadio() {
           border-radius: 16px;
           background: var(--sidebar-bg);
           backdrop-filter: blur(28px);
-          -webkit-backdrop-filter: blur(28px);
           border: 1px solid rgba(255, 255, 255, 0.1);
           box-shadow: 0 10px 40px rgba(0,0,0,0.5);
           transition: box-shadow 0.5s ease;

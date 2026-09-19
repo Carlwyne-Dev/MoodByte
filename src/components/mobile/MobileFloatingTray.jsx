@@ -43,7 +43,6 @@ export default function MobileFloatingTray({ title, onClose, children, heightVh 
           max-width: 480px;
           background: rgba(10, 14, 30, 0.94);
           backdrop-filter: blur(28px);
-          -webkit-backdrop-filter: blur(28px);
           border: 1px solid rgba(255,255,255,0.12);
           border-radius: 22px;
           box-shadow: 0 10px 48px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07);

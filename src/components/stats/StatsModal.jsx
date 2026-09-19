@@ -204,7 +204,6 @@ export default function StatsModal({ onClose }) {
           inset: 0;
           background: rgba(5, 8, 15, 0.7);
           backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
           display: flex;
           align-items: center;
           justify-content: center;

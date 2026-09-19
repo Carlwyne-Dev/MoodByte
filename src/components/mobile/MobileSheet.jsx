@@ -46,7 +46,6 @@ export default function MobileSheet({ title, onClose, children, maxHeight = '82v
           z-index: 99000;
           background: rgba(0,0,0,0.55);
           backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
           display: flex;
           align-items: flex-end;
           animation: sheetFadeIn 0.2s ease;
@@ -60,7 +59,6 @@ export default function MobileSheet({ title, onClose, children, maxHeight = '82v
           width: 100%;
           background: rgba(10, 14, 30, 0.96);
           backdrop-filter: blur(30px);
-          -webkit-backdrop-filter: blur(30px);
           border: 1px solid rgba(255,255,255,0.1);
           border-bottom: none;
           border-radius: 24px 24px 0 0;
@@ -122,7 +120,6 @@ export default function MobileSheet({ title, onClose, children, maxHeight = '82v
           position: static !important;
           background: none !important;
           backdrop-filter: none !important;
-          -webkit-backdrop-filter: none !important;
           display: block !important;
           animation: none !important;
         }

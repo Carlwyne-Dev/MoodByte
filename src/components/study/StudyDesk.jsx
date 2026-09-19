@@ -576,7 +576,6 @@ export default function StudyDesk({ onClose }) {
           gap: 16px;
           background: rgba(15, 23, 42, 0.6);
           backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
           padding: 6px 16px;
           border-radius: 20px;
           border: 1px solid rgba(255, 255, 255, 0.15);
@@ -690,7 +689,6 @@ export default function StudyDesk({ onClose }) {
         .study-pane {
           background: rgba(15, 23, 42, 0.4);
           backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 20px;
           display: flex;
@@ -722,7 +720,6 @@ export default function StudyDesk({ onClose }) {
           flex-direction: column;
           background: rgba(15, 23, 42, 0.4);
           backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 20px;
           overflow: hidden;
@@ -734,7 +731,6 @@ export default function StudyDesk({ onClose }) {
           overflow: hidden;
           background: rgba(15, 23, 42, 0.6);
           backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
           border: 1px solid rgba(255, 255, 255, 0.1);
           box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
         }
@@ -976,7 +972,6 @@ export default function StudyDesk({ onClose }) {
           inset: 0;
           background: rgba(0, 0, 0, 0.6);
           backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
           z-index: 10002;
           display: flex;
           align-items: center;

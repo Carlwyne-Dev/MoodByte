@@ -1082,7 +1082,6 @@ export default function Player({ isMobile = false }) {
           position: fixed; inset: 0;
           background: rgba(0, 0, 0, 0.6);
           backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
           z-index: 10002;
           display: flex; align-items: center; justify-content: center;
         }
@@ -1330,7 +1329,6 @@ export default function Player({ isMobile = false }) {
           width: 260px;
           background: rgba(30, 30, 35, 0.6);
           backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.15);
           border-radius: 16px;
           padding: 1.2rem;

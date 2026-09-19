@@ -185,7 +185,6 @@ export default function DailyQuoteWidget() {
           height: 160px;
           background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
           backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
           border-radius: 4px; /* Note-like corners */
           display: flex;
           flex-direction: column;
@@ -275,7 +274,6 @@ export default function DailyQuoteWidget() {
           border-radius: 50%;
           background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
           backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
           border: 1px solid rgba(255,255,255,0.2);
           display: flex;
           align-items: center;
@@ -403,7 +401,6 @@ export default function DailyQuoteWidget() {
           inset: 0;
           background: rgba(0, 0, 0, 0.4);
           backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
           display: flex;
           align-items: center;
           justify-content: center;

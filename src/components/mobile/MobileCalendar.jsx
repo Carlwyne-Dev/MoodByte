@@ -251,7 +251,6 @@ export default function MobileCalendar() {
         .mob-day-panel {
           background: rgba(20, 27, 50, 0.85);
           backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
           border: 1px solid rgba(168,85,247,0.2);
           border-radius: 14px;
           padding: 14px;

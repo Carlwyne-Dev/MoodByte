@@ -34,7 +34,6 @@ export default function MobileBottomNav({ activeTab, onTabChange, items }) {
           padding: 0 10px;
           background: rgba(10, 14, 30, 0.82);
           backdrop-filter: blur(28px);
-          -webkit-backdrop-filter: blur(28px);
           border: 1px solid rgba(255,255,255,0.12);
           border-radius: 24px;
           box-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);

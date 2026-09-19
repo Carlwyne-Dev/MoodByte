@@ -119,7 +119,6 @@ export default function TaskDatePicker({ top, left, onConfirm, onClose }) {
           width: 230px;
           background: rgba(15, 22, 40, 0.96);
           backdrop-filter: blur(18px);
-          -webkit-backdrop-filter: blur(18px);
           border: 1px solid rgba(255,255,255,0.14);
           border-radius: 14px;
           box-shadow: 0 14px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07);

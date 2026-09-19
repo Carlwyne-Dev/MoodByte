@@ -515,7 +515,6 @@ export default function StickyNoteBoard() {
           position: fixed; inset: 0;
           background: rgba(0, 0, 0, 0.4);
           backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
           display: flex; align-items: center; justify-content: center;
           z-index: 10000;
         }
@@ -573,7 +572,6 @@ export default function StickyNoteBoard() {
           padding: 0.3rem;
           background: rgba(11, 17, 32, 0.6);
           backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
           border: 1px solid rgba(255,255,255,0.08);
           border-radius: 99px;
           z-index: 50;

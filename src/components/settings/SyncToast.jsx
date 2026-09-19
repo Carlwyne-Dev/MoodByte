@@ -82,7 +82,6 @@ export default function SyncToast() {
           gap: 10px;
           background: rgba(34, 197, 94, 0.15);
           backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
           border: 1px solid rgba(34, 197, 94, 0.3);
           border-radius: 100px;
           padding: 10px 20px;
