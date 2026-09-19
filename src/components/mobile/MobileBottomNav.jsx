@@ -1,18 +1,11 @@
 import React from 'react';
-import { Moon, ClipboardList, Calendar, BookOpen, MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 
-const TABS = [
-  { id: 'themes',   Icon: Moon,           label: 'Themes' },
-  { id: 'tasks',    Icon: ClipboardList,  label: 'Tasks' },
-  { id: 'calendar', Icon: Calendar,       label: 'Calendar' },
-  { id: 'study',    Icon: BookOpen,       label: 'Study' },
-  { id: 'more',     Icon: MoreHorizontal, label: 'More' },
-];
-
-export default function MobileBottomNav({ activeTab, onTabChange }) {
+export default function MobileBottomNav({ activeTab, onTabChange, items }) {
+  const tabs = [...items, { id: 'more', Icon: MoreHorizontal, label: 'More' }];
   return (
     <nav className="mob-bottom-nav">
-      {TABS.map(({ id, Icon, label }) => {
+      {tabs.map(({ id, Icon, label }) => {
         return (
           <button
             key={id}

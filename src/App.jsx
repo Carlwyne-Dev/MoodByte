@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useTheme } from './context/ThemeContext';
 import MoodSelector from './components/mood/MoodSelector';
 import TaskList from './components/tasks/TaskList';
@@ -9,163 +9,43 @@ import LoadingScreen from './components/LoadingScreen';
 import WelcomeModal from './components/WelcomeModal';
 import AchievementManager from './components/stats/AchievementManager';
 import StreakCounter from './components/stats/StreakCounter';
-import SyncModal from './components/settings/SyncModal';
 import WhatsNewModal from './components/settings/WhatsNewModal';
 import AboutModal from './components/settings/AboutModal';
+import BackgroundManager from './components/BackgroundManager';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useCloudSync } from './hooks/useCloudSync';
 import { useAnalytics } from './hooks/useAnalytics';
+import { useSectionNav } from './hooks/useSectionNav';
+import { useBackButtonBlock } from './hooks/useBackButtonBlock';
+import { useBackgroundPreloader } from './hooks/useBackgroundPreloader';
 import SyncToast from './components/settings/SyncToast';
 import MobileLayout from './components/mobile/MobileLayout';
+import { THEMES, SIDEBAR_SECTIONS, DEFAULT_BACKGROUNDS } from './config/appConfig';
 
-import { Moon, CloudRain, Wind, Zap, ChevronRight, ChevronLeft, Palette, Music2, Timer as TimerIcon, CheckSquare, Smile, Loader2, Eye, EyeOff } from 'lucide-react';
-
-const THEMES = [
-  { id: 'night',      label: 'Night',      Icon: Moon,      color: '#a855f7' }, // Purple
-  { id: 'rainy',      label: 'Rain',       Icon: CloudRain, color: '#38bdf8' }, // Sky Blue
-  { id: 'chill',      label: 'Chill',      Icon: Wind,      color: '#fb923c' }, // Sunset Orange
-  { id: 'productive', label: 'Focus',      Icon: Zap,       color: '#22c55e' }, // Emerald Green
-];
-
-function BackgroundManager({ bgImage }) {
-  const [layers, setLayers] = React.useState([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    let isCancelled = false;
-    setIsLoading(true);
-
-    const img = new Image();
-    img.onload = () => {
-      if (isCancelled) return;
-      setIsLoading(false);
-      
-      setLayers(prev => {
-        if (prev.length > 0 && prev[prev.length - 1].src === bgImage) return prev;
-        return [...prev, { id: Date.now(), src: bgImage }];
-      });
-
-      // Cleanup old layers after transition (1.5s)
-      setTimeout(() => {
-        if (!isCancelled) {
-          setLayers(prev => prev.slice(-1));
-        }
-      }, 1500);
-    };
-    img.src = bgImage;
-
-    return () => { isCancelled = true; };
-  }, [bgImage]);
-
-  return (
-    <div className="bg-manager">
-      {layers.length === 0 && (
-        <div className="bg-skeleton-pulse" />
-      )}
-      
-      {layers.map((layer, i) => (
-        <div
-          key={layer.id}
-          className="bg-layer"
-          style={{
-            backgroundImage: `url('${layer.src}')`,
-            opacity: i === layers.length - 1 ? 1 : 0, // fade out old layers
-          }}
-        />
-      ))}
-
-      {layers.length > 0 && isLoading && (
-        <div className="bg-loading-indicator fade-in">
-          <Loader2 size={16} className="spin-slow" />
-        </div>
-      )}
-    </div>
-  );
-}
+import { ChevronRight, ChevronLeft, Eye, EyeOff } from 'lucide-react';
+import './App.css';
 
 function App() {
   useCloudSync(); // Initialize cloud sync
   const { theme, bgImage, changeTheme } = useTheme();
   useAnalytics(theme); // Silent visit tracking
   const isMobile = useIsMobile();
-  const [minimized, setMinimized] = React.useState({});
-  const [sidebarHidden, setSidebarHidden] = React.useState(false);
-  const [zenMode, setZenMode] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(() => {
+  const [minimized, setMinimized] = useState({});
+  const [sidebarHidden, setSidebarHidden] = useState(false);
+  const [zenMode, setZenMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(() => {
     return !sessionStorage.getItem('moodbyte_session_started');
   });
 
-  // Silent Cache Preloader
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      const defaultBgs = [
-        '/bg/night1.gif', '/bg/night2.gif', '/bg/night3.gif',
-        '/bg/rain1.gif', '/bg/rain2.gif', '/bg/rain3.gif',
-        '/bg/chill1.gif', '/bg/chill2.gif', '/bg/chill3.gif',
-        '/bg/focus1.gif', '/bg/focus2.gif', '/bg/focus3.gif',
-      ];
-      defaultBgs.forEach(src => {
-        const img = new Image();
-        img.src = src;
-      });
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
+  useBackgroundPreloader(DEFAULT_BACKGROUNDS);
+  useBackButtonBlock();
 
   const [hasSeenAppWelcome, setHasSeenAppWelcome] = useLocalStorage('moodbyte_welcome_main', false);
-  const [showAbout, setShowAbout] = React.useState(false);
-  const [showWhatsNew, setShowWhatsNew] = React.useState(false);
+  const [showAbout, setShowAbout] = useState(false);
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [showNavRail] = useLocalStorage('moodbyte_show_nav_rail', true);
-  const sidebarScrollRef = useRef(null);
-  const [activeSection, setActiveSection] = React.useState('themes');
-
-  const SECTIONS = [
-    { id: 'themes',   Icon: Palette,     label: 'Themes'   },
-    { id: 'music',    Icon: Music2,      label: 'Music'    },
-    { id: 'pomodoro', Icon: TimerIcon,   label: 'Pomodoro' },
-    { id: 'tasks',    Icon: CheckSquare, label: 'Tasks'    },
-    { id: 'mood',     Icon: Smile,       label: 'Mood'     },
-  ];
-
-  const scrollToSection = (id) => {
-    const el = document.getElementById('sec-' + id);
-    const container = sidebarScrollRef.current;
-    if (!el || !container) return;
-    const elTop = el.offsetTop;
-    container.scrollTo({ top: elTop - 24, behavior: 'smooth' });
-  };
-
-  // Track which section is currently closest to top
-  useEffect(() => {
-    const container = sidebarScrollRef.current;
-    if (!container) return;
-    const onScroll = () => {
-      let closest = SECTIONS[0].id;
-      let minDist = Infinity;
-      SECTIONS.forEach(({ id }) => {
-        const el = document.getElementById('sec-' + id);
-        if (!el) return;
-        const dist = Math.abs(el.offsetTop - container.scrollTop - 24);
-        if (dist < minDist) { minDist = dist; closest = id; }
-      });
-      setActiveSection(closest);
-    };
-    container.addEventListener('scroll', onScroll);
-    return () => container.removeEventListener('scroll', onScroll);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Intercept browser back button — push a dummy state on mount,
-  // then re-push whenever popstate fires so the back button never leaves the page.
-  useEffect(() => {
-    history.pushState({ moodbyte: true }, '');
-    const handlePop = () => {
-      history.pushState({ moodbyte: true }, '');
-    };
-    window.addEventListener('popstate', handlePop);
-    return () => window.removeEventListener('popstate', handlePop);
-  }, []);
+  const { sidebarScrollRef, activeSection, scrollToSection } = useSectionNav(SIDEBAR_SECTIONS);
 
   const toggle = (key) => setMinimized(prev => ({ ...prev, [key]: !prev[key] }));
 
@@ -187,14 +67,14 @@ function App() {
         setIsLoading(false);
       }} />}
       {!isLoading && !hasSeenAppWelcome && (
-        <WelcomeModal 
-          title="Welcome to MoodByte!" 
-          message="<p>Hi there! MoodByte is your personal aesthetic space to relax, focus, and get things done.</p><p>You can <strong>pin notes</strong> to the board, change the <strong>dynamic background themes</strong>, listen to <strong>Spotify playlists or local music</strong>, and track your tasks.</p><p>Everything is designed to help you stay in the zone. Enjoy your stay!</p>" 
-          onGotIt={() => setHasSeenAppWelcome(true)} 
+        <WelcomeModal
+          title="Welcome to MoodByte!"
+          message="<p>Hi there! MoodByte is your personal aesthetic space to relax, focus, and get things done.</p><p>You can <strong>pin notes</strong> to the board, change the <strong>dynamic background themes</strong>, listen to <strong>Spotify playlists or local music</strong>, and track your tasks.</p><p>Everything is designed to help you stay in the zone. Enjoy your stay!</p>"
+          onGotIt={() => setHasSeenAppWelcome(true)}
         />
       )}
       <BackgroundManager bgImage={bgImage} />
-      
+
       {/* Main Content Area (Notes Wall) */}
       <main className="main-content">
         <div className="wall-content">
@@ -204,9 +84,9 @@ function App() {
 
       {/* Right Sidebar */}
       <aside className={`glass-panel sidebar ${sidebarHidden ? 'hidden' : ''}`}>
-        
+
         {/* Toggle Button */}
-        <button 
+        <button
           className="sidebar-toggle-btn"
           onClick={() => {
              setSidebarHidden(!sidebarHidden);
@@ -219,9 +99,9 @@ function App() {
 
         {/* Section Quick-Nav Rail */}
         {showNavRail && (() => {
-          const activeIdx = SECTIONS.findIndex(s => s.id === activeSection);
-          const aboveSections = SECTIONS.slice(0, activeIdx);
-          const belowSections = SECTIONS.slice(activeIdx + 1);
+          const activeIdx = SIDEBAR_SECTIONS.findIndex(s => s.id === activeSection);
+          const aboveSections = SIDEBAR_SECTIONS.slice(0, activeIdx);
+          const belowSections = SIDEBAR_SECTIONS.slice(activeIdx + 1);
           return (
             <div className="section-nav-rail">
               <div className="snr-group">
@@ -243,7 +123,7 @@ function App() {
         })()}
 
         <div className="sidebar-content" ref={sidebarScrollRef}>
-          
+
           {/* Themes Section */}
           <div className="tool-section" id="sec-themes">
             <div className="section-header" onClick={() => toggle('themes')}>
@@ -253,7 +133,7 @@ function App() {
             <div className={`section-body ${minimized.themes ? 'collapsed' : ''}`}>
               <div className="theme-options inner-glass">
                 {THEMES.map(({ id, label, Icon, color }) => (
-                  <button 
+                  <button
                     key={id}
                     className={`theme-btn ${theme === id ? 'active' : ''}`}
                     onClick={(e) => { e.stopPropagation(); changeTheme(id); }}
@@ -333,392 +213,9 @@ function App() {
       {/* About Modal */}
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
 
-      <style jsx="true">{`
-        .app-container {
-          width: 100vw;
-          height: 100vh;
-          overflow: hidden;
-          position: relative;
-        }
-
-        .bg-manager {
-          position: absolute;
-          inset: 0;
-          z-index: -1;
-          pointer-events: none;
-        }
-
-        .bg-layer {
-          position: absolute;
-          inset: -20px; /* Slight bleed to avoid edge seams */
-          background-size: cover;
-          background-position: center;
-          transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @media (max-width: 768px) {
-          .app-container {
-            overflow: auto;
-          }
-          .sidebar {
-            position: relative;
-            top: auto; right: auto; bottom: auto;
-            width: 100%;
-            height: auto;
-            max-height: 50vh;
-            margin: 1rem;
-            width: calc(100% - 2rem);
-          }
-          .main-content {
-            position: relative;
-            height: 50vh;
-          }
-        }
-
-        .main-content {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
-        }
-
-        .sidebar {
-          position: absolute;
-          top: 1.5rem;
-          right: 1.5rem;
-          bottom: 1.5rem;
-          width: 340px;
-          display: flex;
-          flex-direction: column;
-          z-index: 100;
-          border-radius: var(--card-radius);
-          transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
-          background: var(--sidebar-bg) !important;
-          backdrop-filter: blur(28px) !important;
-          -webkit-backdrop-filter: blur(28px) !important;
-        }
-
-        .sidebar.hidden {
-          transform: translateX(calc(100% + 1.5rem));
-        }
-        .sidebar.hidden .sidebar-content {
-          pointer-events: none;
-          opacity: 0.3;
-        }
-
-        .sidebar-toggle-btn {
-          position: absolute;
-          left: -14px;
-          top: 2rem;
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          background: var(--bg-color);
-          border: 1px solid rgba(255,255,255,0.15);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--text-muted);
-          cursor: pointer;
-          z-index: 110;
-          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-        }
-        .sidebar-toggle-btn:hover {
-          color: var(--text-color);
-          background: rgba(255,255,255,0.1);
-          transform: scale(1.1);
-        }
-
-        /* ── Section Quick-Nav Rail ─────────────────────────────────────── */
-        .section-nav-rail {
-          position: absolute;
-          left: -34px;
-          top: 4.5rem;
-          bottom: 2.5rem;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          z-index: 105;
-          align-items: center;
-        }
-
-        .snr-group {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          align-items: center;
-        }
-
-        @keyframes popInRail {
-          0% { transform: scale(0.5) translateY(10px); opacity: 0; }
-          100% { transform: scale(1) translateY(0); opacity: 1; }
-        }
-
-        .snr-btn {
-          width: 26px;
-          height: 26px;
-          border-radius: 50%;
-          background: rgba(0, 0, 0, 0.65);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          color: rgba(255, 255, 255, 0.65);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s, background 0.2s;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-          backdrop-filter: blur(8px);
-          transform: scale(1);
-          opacity: 1;
-          animation: popInRail 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .snr-btn.snr-above:hover, .snr-btn.snr-below:hover {
-          color: #fff;
-          transform: scale(1.15);
-        }
-        
-        .snr-btn.snr-above:active, .snr-btn.snr-below:active {
-          transform: scale(0.9);
-        }
-
-        .sidebar.hidden .section-nav-rail {
-          opacity: 0;
-          pointer-events: none;
-        }
-
-        .sidebar-content {
-          flex: 1;
-          padding: 1.5rem;
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-          -webkit-mask-image: linear-gradient(
-            to bottom,
-            transparent 0px,
-            black 40px,
-            black calc(100% - 40px),
-            transparent 100%
-          );
-          mask-image: linear-gradient(
-            to bottom,
-            transparent 0px,
-            black 40px,
-            black calc(100% - 40px),
-            transparent 100%
-          );
-        }
-
-        /* Tool Sections */
-        .tool-section {
-          display: flex;
-          flex-direction: column;
-          gap: 0;
-        }
-
-        .section-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 1rem 0.5rem;
-          cursor: pointer;
-          user-select: none;
-          transition: background 0.2s ease;
-          border-radius: 8px;
-        }
-        .section-header:hover {
-          background: rgba(255, 255, 255, 0.03);
-        }
-        .section-header h3 {
-          margin: 0;
-        }
-        .section-header:hover .minimize-icon {
-          color: var(--text-color);
-        }
-
-        .section-body {
-          display: block;
-          max-height: 800px;
-          width: 100%;
-          transition:
-            max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-            opacity 0.25s ease,
-            padding-top 0.3s ease,
-            padding-bottom 0.3s ease;
-          opacity: 1;
-          overflow: hidden;
-          padding-top: 1.2rem;
-          padding-bottom: 2.5rem;
-        }
-        .section-body.collapsed {
-          max-height: 0;
-          opacity: 0;
-          padding-top: 0;
-          padding-bottom: 0;
-        }
-
-        .section-header h3 {
-          font-size: 1rem;
-          color: var(--text-color);
-          text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .minimize-icon {
-          color: var(--text-muted);
-          font-weight: bold;
-          cursor: pointer;
-        }
-
-        .theme-options {
-          display: flex;
-          justify-content: space-around;
-          align-items: center;
-          padding: 1rem 0.8rem;
-          gap: 0.5rem;
-        }
-
-        .theme-btn {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.35rem;
-          padding: 0.7rem 0.6rem;
-          border-radius: 14px;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-          color: var(--text-muted);
-          background: transparent;
-          border: 1px solid transparent;
-          flex: 1;
-        }
-
-        .theme-label {
-          font-family: 'Outfit', sans-serif;
-          font-size: 0.6rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          opacity: 0.8;
-        }
-
-        .theme-btn:hover {
-          color: var(--theme-color);
-          background: color-mix(in srgb, var(--theme-color) 8%, transparent);
-          transform: translateY(-2px);
-        }
-
-        .theme-btn.active {
-          color: var(--theme-color);
-          background: color-mix(in srgb, var(--theme-color) 15%, transparent);
-          border-color: color-mix(in srgb, var(--theme-color) 40%, transparent);
-        }
-
-        /* About Button */
-        .about-btn {
-          width: 100%;
-          padding: 0.75rem 1rem;
-          border-radius: 14px;
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          color: var(--text-muted);
-          font-family: 'Outfit', sans-serif;
-          font-size: 0.85rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          text-align: center;
-          letter-spacing: 0.5px;
-        }
-
-        .about-btn:hover {
-          background: rgba(255, 255, 255, 0.08);
-          color: var(--text-color);
-          border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        /* About Modal */
-        .about-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.6);
-          backdrop-filter: blur(6px);
-          z-index: 9000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .about-modal {
-          background: rgba(10, 15, 30, 0.97);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 24px;
-          padding: 1.5rem 2rem;
-          max-width: 480px;
-          width: 90%;
-          display: flex;
-          flex-direction: column;
-          gap: 0.6rem;
-          box-shadow: 0 30px 60px rgba(0,0,0,0.5);
-        }
-
-        .about-modal-title {
-          font-family: 'Press Start 2P', monospace;
-          font-size: 0.75rem;
-          letter-spacing: 1.5px;
-          color: var(--primary);
-          line-height: 1.6;
-        }
-
-        .about-modal-text {
-          font-family: 'Outfit', sans-serif;
-          font-size: 0.9rem;
-          color: #94a3b8;
-          line-height: 1.8;
-        }
-
-        .about-modal-footer {
-          font-family: 'Outfit', sans-serif;
-          font-size: 0.9rem;
-          color: var(--primary);
-          opacity: 0.8;
-          font-style: italic;
-        }
-
-        .about-close-btn {
-          align-self: flex-end;
-          padding: 0.5rem 1.4rem;
-          border-radius: 10px;
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(255,255,255,0.1);
-          color: var(--text-color);
-          font-family: 'Outfit', sans-serif;
-          font-size: 0.85rem;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .about-close-btn:hover {
-          background: var(--primary);
-          border-color: var(--primary);
-          color: #fff;
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(20px) scale(0.97); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
-      
       {/* Zen Toggle Button */}
       {!isMobile && (
-        <button 
+        <button
           className={`zen-toggle-btn ${sidebarHidden ? 'visible' : 'hidden'}`}
           onClick={() => setZenMode(!zenMode)}
           title={zenMode ? "Exit Zen Mode" : "Enter Zen Mode"}

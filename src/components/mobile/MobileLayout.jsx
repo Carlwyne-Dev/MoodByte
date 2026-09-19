@@ -23,6 +23,7 @@ import LoadingScreen from '../LoadingScreen';
 import WelcomeModal from '../WelcomeModal';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { Moon, CloudRain, Wind, Zap } from 'lucide-react';
+import { MOBILE_NAV_ITEMS, DEFAULT_PRIMARY_NAV_IDS } from '../../config/mobileNavConfig';
 
 const THEMES = [
   { id: 'night',      label: 'Night',  Icon: Moon,      color: '#a855f7' },
@@ -74,20 +75,34 @@ export default function MobileLayout() {
   const [showMorePopup, setShowMorePopup] = useState(false);
   const [activeTray, setActiveTray] = useState(null); // 'tasks' | 'calendar'
   const [activeSheet, setActiveSheet] = useState(null);
+  const [primaryNavIds] = useLocalStorage('moodbyte_mobile_nav_items', DEFAULT_PRIMARY_NAV_IDS);
+
+  // Guard against a stale/unknown id ever making it into the persisted list
+  const validPrimaryIds = primaryNavIds.filter(id => MOBILE_NAV_ITEMS.some(i => i.id === id));
+  const primaryItems = (validPrimaryIds.length ? validPrimaryIds : DEFAULT_PRIMARY_NAV_IDS)
+    .map(id => MOBILE_NAV_ITEMS.find(i => i.id === id))
+    .filter(Boolean);
+  const moreItems = MOBILE_NAV_ITEMS.filter(i => !primaryItems.some(p => p.id === i.id));
 
   const handleTabChange = (tabId) => {
-    // If we are clicking 'more', toggle it, but maybe close trays/sheets? 
-    // Usually more popup just overlays. We'll just toggle it.
     if (tabId === 'more') {
-      setShowMorePopup(!showMorePopup);
+      const opening = !showMorePopup;
+      setShowMorePopup(opening);
+      // Opening More should close whatever tray/sheet is already up, so they don't stack.
+      if (opening) {
+        setActiveTray(null);
+        setActiveSheet(null);
+      }
       return;
     }
-    
+
     // For any other tab, close the More popup
     setShowMorePopup(false);
-    
+
+    const kind = MOBILE_NAV_ITEMS.find(i => i.id === tabId)?.kind;
+
     // If the user clicks the currently active tab/tray/sheet, close it (toggle behavior)
-    if (tabId === 'study') {
+    if (kind === 'study') {
       setShowStudy(true);
       setActiveTab('study');
       setActiveTray(null);
@@ -95,17 +110,7 @@ export default function MobileLayout() {
       return;
     }
 
-    if (tabId === 'themes') {
-      if (activeSheet === 'themes') {
-        setActiveSheet(null);
-      } else {
-        setActiveSheet('themes');
-        setActiveTray(null);
-      }
-      return;
-    }
-
-    if (tabId === 'tasks' || tabId === 'calendar') {
+    if (kind === 'tray') {
       if (activeTray === tabId) {
         setActiveTray(null); // toggle close
       } else {
@@ -113,17 +118,22 @@ export default function MobileLayout() {
         setActiveTray(tabId);
         setActiveSheet(null); // Close any open sheets
       }
-    } else {
-      setActiveTab(tabId);
-      setActiveTray(null);
+      return;
+    }
+
+    // 'sheet' (or anything else pinned to the bar) — toggle it open/closed
+    setActiveTab(tabId);
+    setActiveTray(null);
+    if (activeSheet === tabId) {
       setActiveSheet(null);
+    } else {
+      setActiveSheet(tabId);
     }
   };
 
-  const handleMoreSelect = (id) => {
-    setActiveSheet(id);
-    setShowMorePopup(false);
-  };
+  // Route through handleTabChange so a tray/study item picked from More
+  // (not just a sheet) still opens correctly, not just via setActiveSheet.
+  const handleMoreSelect = (id) => handleTabChange(id);
 
   return (
     <div className="mob-layout">
@@ -175,6 +185,7 @@ export default function MobileLayout() {
       {/* More popup */}
       {showMorePopup && (
         <MobileMorePopup
+          items={moreItems}
           onSelect={handleMoreSelect}
           onClose={() => setShowMorePopup(false)}
         />
@@ -273,7 +284,7 @@ export default function MobileLayout() {
         </MobileSheet>
       )}
 
-      <MobileBottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+      <MobileBottomNav activeTab={activeTab} onTabChange={handleTabChange} items={primaryItems} />
 
       <style>{`
         @keyframes mobSheetSlideUp {

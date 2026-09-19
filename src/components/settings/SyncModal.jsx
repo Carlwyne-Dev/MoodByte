@@ -3,12 +3,27 @@ import { createPortal } from 'react-dom';
 import { X, Cloud, CheckCircle2, Settings as SettingsIcon, AlertTriangle, Trash2, LayoutTemplate } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useIsMobile } from '../../hooks/useIsMobile';
+import { MOBILE_NAV_ITEMS, MAX_PRIMARY_NAV_ITEMS, DEFAULT_PRIMARY_NAV_IDS } from '../../config/mobileNavConfig';
 
 export default function SyncModal({ onClose }) {
+  const isMobile = useIsMobile();
   const [user, setUser] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showNavRail, setShowNavRail] = useLocalStorage('moodbyte_show_nav_rail', true);
+  const [primaryNavIds, setPrimaryNavIds] = useLocalStorage('moodbyte_mobile_nav_items', DEFAULT_PRIMARY_NAV_IDS);
   const [isClosing, setIsClosing] = useState(false);
+
+  const toggleNavItem = (id) => {
+    setPrimaryNavIds(prev => {
+      if (prev.includes(id)) {
+        if (prev.length <= 1) return prev; // keep at least one shortcut on the bar
+        return prev.filter(x => x !== id);
+      }
+      if (prev.length >= MAX_PRIMARY_NAV_ITEMS) return prev; // bar is full
+      return [...prev, id];
+    });
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -119,6 +134,33 @@ export default function SyncModal({ onClose }) {
                 <div className="toggle-thumb" />
               </div>
             </div>
+
+            {isMobile && (
+              <div className="nav-picker" style={{ marginTop: '16px' }}>
+                <div className="setting-info" style={{ marginBottom: '10px' }}>
+                  <h4>Bottom Bar Shortcuts</h4>
+                  <span>Pick up to {MAX_PRIMARY_NAV_ITEMS} for the bottom bar — everything else lives under "More"</span>
+                </div>
+                <div className="nav-picker-grid">
+                  {MOBILE_NAV_ITEMS.map(({ id, Icon, label }) => {
+                    const selected = primaryNavIds.includes(id);
+                    const disabled = !selected && primaryNavIds.length >= MAX_PRIMARY_NAV_ITEMS;
+                    return (
+                      <button
+                        key={id}
+                        className={`nav-picker-chip ${selected ? 'active' : ''}`}
+                        onClick={() => toggleNavItem(id)}
+                        disabled={disabled}
+                      >
+                        <Icon size={16} />
+                        <span>{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className="nav-picker-count">{primaryNavIds.length}/{MAX_PRIMARY_NAV_ITEMS} selected</span>
+              </div>
+            )}
           </div>
 
           <div className="settings-section danger-zone" style={{ marginTop: '24px' }}>
@@ -210,6 +252,42 @@ export default function SyncModal({ onClose }) {
           box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .custom-toggle.active .toggle-thumb { transform: translateX(20px); }
+
+        .nav-picker-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+        }
+        .nav-picker-chip {
+          display: flex; align-items: center; justify-content: center; gap: 6px;
+          padding: 10px 8px;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 10px;
+          color: #94a3b8;
+          font-size: 0.8rem; font-weight: 500; font-family: 'Outfit', sans-serif;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .nav-picker-chip:hover:not(:disabled) {
+          background: rgba(255,255,255,0.06); color: #e2e8f0;
+        }
+        .nav-picker-chip.active {
+          background: rgba(139, 92, 246, 0.18);
+          border-color: rgba(139, 92, 246, 0.5);
+          color: #fff;
+        }
+        .nav-picker-chip:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+        .nav-picker-count {
+          display: block;
+          margin-top: 10px;
+          font-size: 0.78rem;
+          color: #64748b;
+          text-align: right;
+        }
 
         .settings-content {
           padding: 24px;

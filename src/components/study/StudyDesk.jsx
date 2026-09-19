@@ -159,6 +159,7 @@ function ZenTimer() {
 }
 
 export default function StudyDesk({ onClose }) {
+  const isMobile = useIsMobile();
   const { theme, bgImage } = useTheme();
   const { files, saveFile, getFileBlob, deleteFile } = useFileLibrary();
   const [studyNotes, setStudyNotes] = useLocalStorage('zenStudyNotes', '');
@@ -313,13 +314,15 @@ export default function StudyDesk({ onClose }) {
         </div>
 
         <div className="study-header-right" style={{ gap: '12px' }}>
-          <button 
-            className="pet-toggle-btn" 
-            onClick={() => setShowPetSettings(!showPetSettings)}
-            title="Pet Settings"
-          >
-            <Cat size={18} />
-          </button>
+          {!isMobile && (
+            <button
+              className="pet-toggle-btn"
+              onClick={() => setShowPetSettings(!showPetSettings)}
+              title="Pet Settings"
+            >
+              <Cat size={18} />
+            </button>
+          )}
           <ZenMiniPlayer />
         </div>
       </header>
@@ -458,14 +461,16 @@ export default function StudyDesk({ onClose }) {
         )}
       </div>
 
-      {/* Render Study Pet */}
-      <StudyPet 
-        showSettings={showPetSettings} 
-        onCloseSettings={() => setShowPetSettings(false)} 
-      />
+      {/* Study Pet — desktop only, no room for it in the mobile layout */}
+      {!isMobile && (
+        <StudyPet
+          showSettings={showPetSettings}
+          onCloseSettings={() => setShowPetSettings(false)}
+        />
+      )}
 
       {/* Floating pill music player — mobile only, Study Desk context */}
-      {window.innerWidth <= 768 && <MobileFloatingPlayer />}
+      {isMobile && <MobileFloatingPlayer />}
 
       <style>{`
         .study-desk-overlay {
