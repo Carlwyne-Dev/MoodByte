@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import MobileBottomNav from './MobileBottomNav';
 import MobileCalendar from './MobileCalendar';
@@ -8,11 +8,7 @@ import MobileSheet from './MobileSheet';
 
 import TaskList from '../tasks/TaskList';
 import StickyNoteBoard from '../notes/StickyNoteBoard';
-import StudyDesk from '../study/StudyDesk';
 import BgmPlayer from '../bgm/BgmPlayer';
-import StatsModal from '../stats/StatsModal';
-import SettingsModal from '../settings/SettingsModal';
-import SyncModal from '../settings/SyncModal';
 import Player from '../music/Player';
 import Timer from '../pomodoro/Timer';
 import MoodSelector from '../mood/MoodSelector';
@@ -24,6 +20,13 @@ import WelcomeModal from '../WelcomeModal';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { Moon, CloudRain, Wind, Zap } from 'lucide-react';
 import { MOBILE_NAV_ITEMS, DEFAULT_PRIMARY_NAV_IDS } from '../../config/mobileNavConfig';
+
+// Only needed once a user opens the corresponding sheet, so keep them out
+// of the initial mobile bundle.
+const StudyDesk = lazy(() => import('../study/StudyDesk'));
+const StatsModal = lazy(() => import('../stats/StatsModal'));
+const SettingsModal = lazy(() => import('../settings/SettingsModal'));
+const SyncModal = lazy(() => import('../settings/SyncModal'));
 
 const THEMES = [
   { id: 'night',      label: 'Night',  Icon: Moon,      color: '#a855f7' },
@@ -180,7 +183,9 @@ export default function MobileLayout() {
       )}
 
       {/* Study Desk Overlay */}
-      {showStudy && <StudyDesk onClose={() => setShowStudy(false)} />}
+      <Suspense fallback={null}>
+        {showStudy && <StudyDesk onClose={() => setShowStudy(false)} />}
+      </Suspense>
 
       {/* More popup */}
       {showMorePopup && (
@@ -192,15 +197,17 @@ export default function MobileLayout() {
       )}
 
       {/* Sheets opened from More popup */}
-      {activeSheet === 'stats' && (
-        <StatsModal onClose={() => setActiveSheet(null)} />
-      )}
-      {activeSheet === 'settings' && (
-        <SettingsModal onClose={() => setActiveSheet(null)} />
-      )}
-      {activeSheet === 'sync' && (
-        <SyncModal onClose={() => setActiveSheet(null)} />
-      )}
+      <Suspense fallback={null}>
+        {activeSheet === 'stats' && (
+          <StatsModal onClose={() => setActiveSheet(null)} />
+        )}
+        {activeSheet === 'settings' && (
+          <SettingsModal onClose={() => setActiveSheet(null)} />
+        )}
+        {activeSheet === 'sync' && (
+          <SyncModal onClose={() => setActiveSheet(null)} />
+        )}
+      </Suspense>
       {activeSheet === 'themes' && (
         <>
           <div

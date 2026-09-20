@@ -1,7 +1,7 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, Suspense, lazy } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { 
+import {
   Plus, Maximize2, Trash2, Pin, PinOff, Palette, Settings as SettingsIcon,
   Type, Move, BarChart2, BookOpen, Image as ImageIcon, X, Calendar as CalendarIcon, StickyNote, Cloud, CheckCircle2
 } from 'lucide-react';
@@ -9,14 +9,17 @@ import { supabase } from '../../lib/supabase';
 import BgmPlayer from '../bgm/BgmPlayer';
 import LiveRadio from '../bgm/LiveRadio';
 import { useTheme } from '../../context/ThemeContext';
-import StatsModal from '../stats/StatsModal';
-import SettingsModal from '../settings/SettingsModal';
-import SyncModal from '../settings/SyncModal';
-import StudyDesk from '../study/StudyDesk';
 import DailyQuoteWidget from './DailyQuoteWidget';
-import CalendarWidget from '../study/CalendarWidget';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import LiveClock from '../clock/LiveClock';
+
+// These are only needed once a user opens the corresponding modal, so keep
+// them out of the initial bundle.
+const StatsModal = lazy(() => import('../stats/StatsModal'));
+const SettingsModal = lazy(() => import('../settings/SettingsModal'));
+const SyncModal = lazy(() => import('../settings/SyncModal'));
+const StudyDesk = lazy(() => import('../study/StudyDesk'));
+const CalendarWidget = lazy(() => import('../study/CalendarWidget'));
 
 const COLORS = [
   { name: 'Lemon',      value: '#fef08a' },
@@ -318,11 +321,13 @@ export default function StickyNoteBoard() {
         </div>
       </div>
 
-      {showStats && <StatsModal onClose={() => setShowStats(false)} />}
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-      {showSyncModal && <SyncModal onClose={() => setShowSyncModal(false)} />}
-      {showStudyDesk && <StudyDesk onClose={() => setShowStudyDesk(false)} />}
-      {showCalendar && <CalendarWidget onClose={() => setShowCalendar(false)} />}
+      <Suspense fallback={null}>
+        {showStats && <StatsModal onClose={() => setShowStats(false)} />}
+        {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+        {showSyncModal && <SyncModal onClose={() => setShowSyncModal(false)} />}
+        {showStudyDesk && <StudyDesk onClose={() => setShowStudyDesk(false)} />}
+        {showCalendar && <CalendarWidget onClose={() => setShowCalendar(false)} />}
+      </Suspense>
 
       {showDeleteConfirm && createPortal(
         <div className={`custom-confirm-overlay ${isDeleteConfirmClosing ? 'ui-overlay-exit' : 'ui-overlay-enter'}`} onClick={closeDeleteConfirm}>
