@@ -1,29 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-
-const SYNC_KEYS = [
-  'moodbyte_welcome_main',
-  'moodbyte_welcome_desk',
-  'moodbyte_dailyQuote',
-  'calendarNotes',
-  'tasks',
-  'taskHistory',
-  'moodHistory',
-  'stickyNotes',
-  'pomodoroStats',
-  'pomodoroCustom',
-  'unlockedAchievements',
-  'streakStats',
-  'zenStudyNotes',
-  'studyPetSettings',
-  'studyPetTreats',
-  'theme',
-  'customBgsV2',
-  'player_volume',
-  'player_shuffle',
-  'player_repeat',
-  'spotify_history'
-];
+import { isSyncableKey, shouldApplyCloudUpdate, resolveInitialPull, collectSyncPayload } from '../utils/syncLogic';
 
 const LOCAL_TS_KEY = 'moodbyte_local_last_modified';
 
@@ -81,8 +58,7 @@ export function useCloudSync() {
       if (applyingCloudRef.current) return;
       if (e.detail?.fromCloud) return;
 
-      if (e.detail && typeof e.detail.key === 'string' &&
-          (SYNC_KEYS.includes(e.detail.key) || e.detail.key.startsWith('moodbyte_'))) {
+      if (e.detail && typeof e.detail.key === 'string' && isSyncableKey(e.detail.key)) {
         
         // Bump local timestamp so we know local is now the "latest"
         bumpLocalTimestamp();
@@ -117,13 +93,13 @@ export function useCloudSync() {
           const localTs = getLocalTimestamp();
 
           // Only apply cloud update if cloud data is strictly newer
-          if (cloudUpdatedAt <= localTs) return;
+          if (!shouldApplyCloudUpdate(cloudUpdatedAt, localTs)) return;
 
           const newData = payload.new?.data;
           if (newData) {
             applyingCloudRef.current = true;
             Object.entries(newData).forEach(([key, value]) => {
-              if (SYNC_KEYS.includes(key) || key.startsWith('moodbyte_')) {
+              if (isSyncableKey(key)) {
                 const localStr = window.localStorage.getItem(key);
                 const newStr = JSON.stringify(value);
                 if (localStr !== newStr) {
@@ -165,7 +141,7 @@ export function useCloudSync() {
         const localTs = getLocalTimestamp();
 
         // If local is newer (user made changes since last cloud write), skip pull
-        if (onlyIfNewer && localTs > cloudTs) {
+        if (resolveInitialPull({ onlyIfNewer, localTs, cloudTs }) === 'pushLocalInstead') {
           setSyncStatus('success');
           // Push our newer local data up instead
           pushToCloud();
@@ -175,7 +151,7 @@ export function useCloudSync() {
         const cloudData = data.data;
         applyingCloudRef.current = true;
         Object.entries(cloudData).forEach(([key, value]) => {
-          if (SYNC_KEYS.includes(key) || key.startsWith('moodbyte_')) {
+          if (isSyncableKey(key)) {
             window.localStorage.setItem(key, JSON.stringify(value));
             window.dispatchEvent(new CustomEvent('local-storage', { detail: { key, value, fromCloud: true } }));
           }
@@ -203,17 +179,7 @@ export function useCloudSync() {
     try {
       setSyncStatus('syncing');
 
-      const localData = {};
-      for (let i = 0; i < window.localStorage.length; i++) {
-        const key = window.localStorage.key(i);
-        if (SYNC_KEYS.includes(key) || key.startsWith('moodbyte_')) {
-          try {
-            localData[key] = JSON.parse(window.localStorage.getItem(key));
-          } catch (e) {
-            localData[key] = window.localStorage.getItem(key);
-          }
-        }
-      }
+      const localData = collectSyncPayload(window.localStorage);
 
       const { error } = await supabase
         .from('user_sync_data')
