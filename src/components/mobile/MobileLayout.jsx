@@ -27,6 +27,7 @@ const StudyDesk = lazy(() => import('../study/StudyDesk'));
 const StatsModal = lazy(() => import('../stats/StatsModal'));
 const SettingsModal = lazy(() => import('../settings/SettingsModal'));
 const SyncModal = lazy(() => import('../settings/SyncModal'));
+const CommunityWallModal = lazy(() => import('../community/CommunityWallModal'));
 
 const THEMES = [
   { id: 'night',      label: 'Night',  Icon: Moon,      color: '#a855f7' },
@@ -206,6 +207,9 @@ export default function MobileLayout() {
         )}
         {activeSheet === 'sync' && (
           <SyncModal onClose={() => setActiveSheet(null)} />
+        )}
+        {activeSheet === 'community' && (
+          <CommunityWallModal onClose={() => setActiveSheet(null)} />
         )}
       </Suspense>
       {activeSheet === 'themes' && (

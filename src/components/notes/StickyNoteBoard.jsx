@@ -620,9 +620,9 @@ export default function StickyNoteBoard() {
         }
 
         .community-wall-btn {
-          position: fixed;
-          bottom: 24px;
-          right: 24px;
+          position: absolute;
+          bottom: 110px;
+          right: calc(var(--sidebar-offset, 360px) + 40px);
           width: 48px;
           height: 48px;
           border-radius: 50%;
@@ -635,8 +635,8 @@ export default function StickyNoteBoard() {
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: all 0.2s;
-          z-index: 60;
+          transition: all 0.2s, right 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          z-index: 200;
         }
         .community-wall-btn:hover {
           background: rgba(15, 23, 42, 0.9);

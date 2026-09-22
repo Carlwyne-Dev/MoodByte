@@ -7,6 +7,14 @@ import { useAnonId } from '../../hooks/useAnonId';
 import { isTooLong, containsBlockedWord, MAX_NOTE_LENGTH } from '../../utils/wallModeration';
 import { COLORS } from '../notes/StickyNoteBoard';
 
+// Deterministic small tilt per note (not re-randomized on every render) so
+// pinned notes feel hand-placed rather than perfectly aligned.
+function tiltFor(id) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  return (Math.abs(hash) % 7) - 3; // -3deg .. 3deg
+}
+
 export default function CommunityWallModal({ onClose }) {
   const { notes, status, postNote } = useCommunityWall();
   const anonId = useAnonId();
@@ -57,58 +65,59 @@ export default function CommunityWallModal({ onClose }) {
   };
 
   return createPortal(
-    <div className={`wall-overlay ${isClosing ? 'ui-overlay-exit' : 'ui-overlay-enter'}`} onClick={handleClose}>
-      <div className={`wall-modal ${isClosing ? 'ui-modal-exit' : 'ui-modal-enter'}`} onClick={e => e.stopPropagation()}>
-        <div className="wall-header">
-          <div className="wall-header-title">
-            <Users size={20} className="wall-header-icon" />
-            <h2>Community Wall</h2>
-          </div>
-          <button className="wall-close-btn" onClick={handleClose}><X size={20} /></button>
+    <div className={`wall-page ${isClosing ? 'ui-modal-exit' : 'ui-modal-enter'}`}>
+      <header className="wall-header">
+        <button className="wall-exit-btn" onClick={handleClose} title="Exit Community Wall">
+          <X size={18} /> <span className="wall-exit-text">Exit</span>
+        </button>
+        <div className="wall-header-title">
+          <Users size={18} className="wall-header-icon" />
+          <h1>Community Wall</h1>
         </div>
+        <div className="wall-header-spacer" />
+      </header>
 
-        <div className="wall-board" ref={boardRef}>
-          {status === 'loading' && <p className="wall-status-text">Loading the wall...</p>}
-          {status === 'error' && <p className="wall-status-text">Couldn't load the wall. Try again later.</p>}
-          {notes.map(note => (
-            <div
-              key={note.id}
-              className="wall-note"
-              style={{ left: `${note.x}%`, top: `${note.y}%`, background: note.color }}
-            >
-              {note.text}
-            </div>
+      <div className="wall-board" ref={boardRef}>
+        {status === 'loading' && <p className="wall-status-text">Loading the wall...</p>}
+        {status === 'error' && <p className="wall-status-text">Couldn't load the wall. Try again later.</p>}
+        {notes.map(note => (
+          <div
+            key={note.id}
+            className="wall-note"
+            style={{ left: `${note.x}%`, top: `${note.y}%`, background: note.color, '--tilt': `${tiltFor(note.id)}deg` }}
+          >
+            {note.text}
+          </div>
+        ))}
+      </div>
+
+      <div className="wall-compose">
+        <input
+          type="text"
+          className="wall-compose-input"
+          placeholder="Pin a short note for everyone..."
+          value={text}
+          maxLength={MAX_NOTE_LENGTH}
+          onChange={e => { setText(e.target.value); setFormError(''); }}
+          onKeyDown={e => e.key === 'Enter' && handlePinIt()}
+        />
+        <div className="wall-color-swatches">
+          {COLORS.slice(0, 6).map(c => (
+            <button
+              key={c.value}
+              className={`wall-swatch ${color === c.value ? 'active' : ''}`}
+              style={{ background: c.value }}
+              title={c.name}
+              onClick={() => setColor(c.value)}
+            />
           ))}
         </div>
-
-        <div className="wall-compose">
-          <input
-            type="text"
-            className="wall-compose-input"
-            placeholder="Pin a short note for everyone..."
-            value={text}
-            maxLength={MAX_NOTE_LENGTH}
-            onChange={e => { setText(e.target.value); setFormError(''); }}
-            onKeyDown={e => e.key === 'Enter' && handlePinIt()}
-          />
-          <div className="wall-color-swatches">
-            {COLORS.slice(0, 6).map(c => (
-              <button
-                key={c.value}
-                className={`wall-swatch ${color === c.value ? 'active' : ''}`}
-                style={{ background: c.value }}
-                title={c.name}
-                onClick={() => setColor(c.value)}
-              />
-            ))}
-          </div>
-          <button className="wall-pin-btn" onClick={handlePinIt} disabled={!text.trim() || !anonId}>
-            Pin it
-          </button>
-        </div>
+        <button className="wall-pin-btn" onClick={handlePinIt} disabled={!text.trim() || !anonId}>
+          Pin it
+        </button>
         {formError && <p className="wall-form-error">{formError}</p>}
-        <p className="wall-hint">Click "Pin it", then click anywhere on the board to place your note.</p>
       </div>
+      <p className="wall-hint">Click "Pin it", then click anywhere on the board to place your note.</p>
 
       {armedNote && (
         <div
@@ -120,77 +129,131 @@ export default function CommunityWallModal({ onClose }) {
       )}
 
       <style>{`
-        .wall-overlay {
-          position: fixed; inset: 0;
-          background: rgba(0, 0, 0, 0.6);
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
-          z-index: 9999;
-          display: flex; align-items: center; justify-content: center;
+        .wall-page {
+          position: fixed;
+          inset: 0;
+          z-index: 10000;
+          display: flex;
+          flex-direction: column;
         }
-        .wall-modal {
-          background: rgba(15, 23, 42, 0.97);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 24px;
-          width: 720px;
-          max-width: 95vw;
-          max-height: 90vh;
-          display: flex; flex-direction: column;
-          overflow: hidden;
-        }
+
         .wall-header {
-          display: flex; justify-content: space-between; align-items: center;
-          padding: 20px 24px;
-          border-bottom: 1px solid rgba(255,255,255,0.08);
+          height: 60px;
+          flex-shrink: 0;
+          background: rgba(15, 23, 42, 0.9);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 1.5rem;
+          z-index: 10;
+        }
+        .wall-exit-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(239, 68, 68, 0.15);
+          color: #fca5a5;
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          padding: 8px 16px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-family: 'Outfit', sans-serif;
+          font-weight: 500;
+          transition: all 0.2s;
+        }
+        .wall-exit-btn:hover {
+          background: rgba(239, 68, 68, 0.25);
         }
         .wall-header-title {
-          display: flex; align-items: center; gap: 12px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
         }
-        .wall-header-title h2 {
-          margin: 0; font-family: 'Outfit', sans-serif; font-size: 1.4rem; color: #fff;
+        .wall-header-title h1 {
+          margin: 0;
+          font-family: 'Outfit', sans-serif;
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #fff;
         }
         .wall-header-icon { color: #a855f7; }
-        .wall-close-btn {
-          background: rgba(255,255,255,0.05); border: none; color: #94a3b8; cursor: pointer;
-          border-radius: 10px; padding: 8px; transition: all 0.2s;
-        }
-        .wall-close-btn:hover { color: #ef4444; background: rgba(239,68,68,0.15); }
+        .wall-header-spacer { width: 84px; } /* balances the exit button so the title stays centered */
 
+        /* The board itself: a warm, speckled corkboard texture, not a UI panel */
         .wall-board {
           position: relative;
-          height: 420px;
-          margin: 20px 24px 0;
-          background: rgba(0,0,0,0.25);
-          border: 1px dashed rgba(255,255,255,0.15);
-          border-radius: 16px;
+          flex: 1;
           overflow: hidden;
           cursor: crosshair;
+          background-color: #b9895a;
+          background-image:
+            radial-gradient(circle at 1px 1px, rgba(0,0,0,0.18) 1px, transparent 0),
+            linear-gradient(135deg, rgba(255,255,255,0.06), transparent 40%),
+            linear-gradient(315deg, rgba(0,0,0,0.12), transparent 40%);
+          background-size: 9px 9px, 100% 100%, 100% 100%;
+          box-shadow: inset 0 0 120px rgba(0,0,0,0.45);
         }
         .wall-status-text {
           position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-          color: #64748b; font-family: 'Outfit', sans-serif; font-size: 0.9rem;
+          color: rgba(255,255,255,0.75);
+          background: rgba(0,0,0,0.35);
+          padding: 8px 16px;
+          border-radius: 10px;
+          font-family: 'Outfit', sans-serif;
+          font-size: 0.9rem;
         }
+
         .wall-note {
           position: absolute;
-          transform: translate(-50%, -50%) rotate(-2deg);
-          max-width: 140px;
-          padding: 10px 12px;
-          border-radius: 4px;
+          transform: translate(-50%, -50%) rotate(var(--tilt, -2deg));
+          max-width: 150px;
+          padding: 16px 12px 12px;
+          border-radius: 2px;
           font-family: 'Kalam', cursive, 'Outfit', sans-serif;
-          font-size: 0.8rem;
+          font-size: 0.82rem;
+          line-height: 1.3;
           color: #1e293b;
-          box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+          box-shadow: 3px 5px 12px rgba(0,0,0,0.4);
           word-break: break-word;
           pointer-events: none;
         }
+        .wall-note::before {
+          content: '';
+          position: absolute;
+          top: -5px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 11px;
+          height: 11px;
+          border-radius: 50%;
+          background: radial-gradient(circle at 30% 30%, #ff8787, #c92a2a);
+          box-shadow: 0 2px 3px rgba(0,0,0,0.5);
+        }
 
         .wall-compose {
-          display: flex; align-items: center; gap: 12px;
-          padding: 16px 24px;
+          position: fixed;
+          left: 50%;
+          bottom: 76px;
+          transform: translateX(-50%);
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          background: rgba(15, 23, 42, 0.92);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 16px;
+          padding: 12px 16px;
+          box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+          z-index: 20;
+          flex-wrap: wrap;
+          max-width: 92vw;
         }
         .wall-compose-input {
-          flex: 1;
-          background: rgba(255,255,255,0.05);
+          background: rgba(255,255,255,0.06);
           border: 1px solid rgba(255,255,255,0.1);
           border-radius: 10px;
           padding: 10px 14px;
@@ -198,6 +261,7 @@ export default function CommunityWallModal({ onClose }) {
           font-family: 'Outfit', sans-serif;
           font-size: 0.9rem;
           outline: none;
+          width: 240px;
         }
         .wall-compose-input:focus { border-color: #8b5cf6; }
         .wall-color-swatches {
@@ -226,31 +290,51 @@ export default function CommunityWallModal({ onClose }) {
         .wall-pin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .wall-form-error {
-          margin: 0 24px 8px;
+          flex-basis: 100%;
+          margin: 0;
           color: #f87171;
           font-family: 'Outfit', sans-serif;
           font-size: 0.8rem;
         }
         .wall-hint {
-          margin: 0 24px 20px;
-          color: #64748b;
+          position: fixed;
+          left: 50%;
+          bottom: 26px;
+          transform: translateX(-50%);
+          margin: 0;
+          color: rgba(255,255,255,0.6);
+          background: rgba(0,0,0,0.35);
+          padding: 4px 12px;
+          border-radius: 8px;
           font-family: 'Outfit', sans-serif;
-          font-size: 0.78rem;
+          font-size: 0.75rem;
           text-align: center;
+          z-index: 20;
         }
 
         .wall-armed-note {
           position: fixed;
           transform: translate(-50%, -50%) rotate(-2deg);
-          max-width: 140px;
-          padding: 10px 12px;
-          border-radius: 4px;
+          max-width: 150px;
+          padding: 16px 12px 12px;
+          border-radius: 2px;
           font-family: 'Kalam', cursive, 'Outfit', sans-serif;
-          font-size: 0.8rem;
+          font-size: 0.82rem;
           color: #1e293b;
           box-shadow: 0 10px 24px rgba(0,0,0,0.5);
           pointer-events: none;
-          z-index: 10000;
+          z-index: 10001;
+        }
+
+        @media (max-width: 768px) {
+          .wall-exit-text { display: none; }
+          .wall-header-spacer { width: 40px; }
+          .wall-compose {
+            bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+            width: 92vw;
+          }
+          .wall-compose-input { width: 100%; }
+          .wall-hint { bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
         }
       `}</style>
     </div>,
