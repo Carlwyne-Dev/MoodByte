@@ -621,20 +621,22 @@ export default function StickyNoteBoard() {
 
         .community-wall-btn {
           position: absolute;
-          bottom: 110px;
-          right: calc(var(--sidebar-offset, 360px) + 40px);
-          width: 48px;
-          height: 48px;
+          top: 74px;
+          right: calc(var(--sidebar-offset, 360px) + 32px);
+          width: 44px;
+          height: 44px;
           border-radius: 50%;
-          background: rgba(15, 23, 42, 0.7);
+          background: rgba(15, 23, 42, 0.75);
           backdrop-filter: blur(8px);
           -webkit-backdrop-filter: blur(8px);
-          border: 1px solid rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.15);
           color: #fff;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
+          pointer-events: auto;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
           transition: all 0.2s, right 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
           z-index: 200;
         }
