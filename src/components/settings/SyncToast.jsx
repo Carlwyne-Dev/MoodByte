@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Cloud, CheckCircle2 } from 'lucide-react';
+import { Cloud, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export default function SyncToast() {
   const [message, setMessage] = useState(null);
+  const [toastType, setToastType] = useState('success');
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
@@ -11,8 +12,10 @@ export default function SyncToast() {
     let timer = null;
     let exitTimer = null;
 
-    const displayMessage = (msg) => {
-      setMessage(msg);
+    const displayMessage = (detail) => {
+      const isObject = detail && typeof detail === 'object';
+      setMessage(isObject ? detail.message : detail);
+      setToastType(isObject && detail.type === 'error' ? 'error' : 'success');
       setIsExiting(false);
       if (timer) clearTimeout(timer);
       if (exitTimer) clearTimeout(exitTimer);
@@ -57,8 +60,10 @@ export default function SyncToast() {
 
   return createPortal(
     <div className={`sync-toast-container ${isExiting ? 'exiting' : ''}`}>
-      <div className="sync-toast-content">
-        <CheckCircle2 size={18} className="sync-toast-icon" />
+      <div className={`sync-toast-content ${toastType === 'error' ? 'error' : ''}`}>
+        {toastType === 'error'
+          ? <AlertTriangle size={18} className="sync-toast-icon" />
+          : <CheckCircle2 size={18} className="sync-toast-icon" />}
         <span className="sync-toast-text">{message}</span>
       </div>
 
@@ -87,11 +92,20 @@ export default function SyncToast() {
           padding: 10px 20px;
           box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
-        
+
+        .sync-toast-content.error {
+          background: rgba(239, 68, 68, 0.15);
+          border-color: rgba(239, 68, 68, 0.3);
+        }
+
         .sync-toast-icon {
           color: #22c55e;
         }
-        
+
+        .sync-toast-content.error .sync-toast-icon {
+          color: #ef4444;
+        }
+
         .sync-toast-text {
           color: #fff;
           font-family: 'Outfit', sans-serif;
