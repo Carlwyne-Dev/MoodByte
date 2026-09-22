@@ -312,6 +312,7 @@ export default function MobileLayout() {
         /* Hide desktop-only elements inside StickyNoteBoard */
         .mob-layout .top-left-controls { display: none !important; }
         .mob-layout .daily-quote-widget { display: none !important; }
+        .mob-layout .community-wall-btn { display: none !important; }
 
         /* Floating BGM */
         .mob-bgm-float {

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import {
   Plus, Maximize2, Trash2, Pin, PinOff, Palette, Settings as SettingsIcon,
-  Type, Move, BarChart2, BookOpen, Image as ImageIcon, X, Calendar as CalendarIcon, StickyNote, Cloud, CheckCircle2
+  Type, Move, BarChart2, BookOpen, Image as ImageIcon, X, Calendar as CalendarIcon, StickyNote, Cloud, CheckCircle2, Users
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import BgmPlayer from '../bgm/BgmPlayer';
@@ -20,6 +20,7 @@ const SettingsModal = lazy(() => import('../settings/SettingsModal'));
 const SyncModal = lazy(() => import('../settings/SyncModal'));
 const StudyDesk = lazy(() => import('../study/StudyDesk'));
 const CalendarWidget = lazy(() => import('../study/CalendarWidget'));
+const CommunityWallModal = lazy(() => import('../community/CommunityWallModal'));
 
 export const COLORS = [
   { name: 'Lemon',      value: '#fef08a' },
@@ -77,6 +78,7 @@ export default function StickyNoteBoard() {
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [showStudyDesk, setShowStudyDesk] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showCommunityWall, setShowCommunityWall] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleteConfirmClosing, setIsDeleteConfirmClosing] = useState(false);
   const [closingNotes, setClosingNotes] = useState([]);
@@ -321,12 +323,21 @@ export default function StickyNoteBoard() {
         </div>
       </div>
 
+      <button
+        className="community-wall-btn"
+        onClick={(e) => { e.stopPropagation(); setShowCommunityWall(true); }}
+        title="Community Wall"
+      >
+        <Users size={20} />
+      </button>
+
       <Suspense fallback={null}>
         {showStats && <StatsModal onClose={() => setShowStats(false)} />}
         {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
         {showSyncModal && <SyncModal onClose={() => setShowSyncModal(false)} />}
         {showStudyDesk && <StudyDesk onClose={() => setShowStudyDesk(false)} />}
         {showCalendar && <CalendarWidget onClose={() => setShowCalendar(false)} />}
+        {showCommunityWall && <CommunityWallModal onClose={() => setShowCommunityWall(false)} />}
       </Suspense>
 
       {showDeleteConfirm && createPortal(
@@ -606,6 +617,30 @@ export default function StickyNoteBoard() {
           height: 18px;
           background: rgba(255,255,255,0.1);
           margin: 0 0.2rem;
+        }
+
+        .community-wall-btn {
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          background: rgba(15, 23, 42, 0.7);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s;
+          z-index: 60;
+        }
+        .community-wall-btn:hover {
+          background: rgba(15, 23, 42, 0.9);
+          transform: scale(1.05);
         }
 
         .stats-btn {
