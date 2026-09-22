@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Users, Eye, Smile, CheckSquare, Palette, TrendingUp, ShieldAlert, RefreshCw, LogOut, Activity, MonitorSmartphone, Clock } from 'lucide-react';
+import { Users, Eye, Smile, CheckSquare, Palette, TrendingUp, ShieldAlert, RefreshCw, LogOut, Activity, MonitorSmartphone, Clock, Trash2 } from 'lucide-react';
 
 // ── CONFIG: put your admin email here ─────────────────────────────────────────
 const ADMIN_EMAIL = 'magharicarlwyne@gmail.com';
@@ -63,6 +63,7 @@ export default function AdminDashboard() {
   const [unauthorized, setUnauthorized] = useState(false);
   const [stats, setStats] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [boardNotes, setBoardNotes] = useState([]);
 
   const fetchedRef = React.useRef(false);
 
@@ -74,6 +75,7 @@ export default function AdminDashboard() {
       if (!fetchedRef.current) {
         fetchedRef.current = true;
         fetchStats();
+        fetchBoardNotes();
       }
     };
 
@@ -162,6 +164,22 @@ export default function AdminDashboard() {
     setLoading(false);
   };
 
+  const fetchBoardNotes = async () => {
+    const { data, error } = await supabase
+      .from('board_notes')
+      .select('id, text, color, created_at')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (!error) setBoardNotes(data || []);
+  };
+
+  const deleteNote = async (id) => {
+    const { error } = await supabase.from('board_notes').delete().eq('id', id);
+    if (!error) {
+      setBoardNotes(prev => prev.filter(n => n.id !== id));
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = '/';
@@ -238,7 +256,7 @@ export default function AdminDashboard() {
           
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
-              onClick={fetchStats}
+              onClick={() => { fetchStats(); fetchBoardNotes(); }}
               disabled={refreshing}
               style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '14px', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem', fontWeight: 600, transition: 'all 0.2s', backdropFilter: 'blur(10px)' }}
               onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
@@ -335,6 +353,39 @@ export default function AdminDashboard() {
                   );
                 })}
               </div>
+            </div>
+          )}
+        </div>
+
+        {/* Community Wall moderation */}
+        <div style={{ marginTop: '32px', background: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderTop: '1px solid rgba(255,255,255,0.2)', borderRadius: '24px', padding: '32px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.5)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.1)', padding: '10px', borderRadius: '12px' }}>
+              <Users color="#fff" size={24} />
+            </div>
+            <h3 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600 }}>Community Wall ({boardNotes.length})</h3>
+          </div>
+
+          {boardNotes.length === 0 ? (
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>No notes pinned yet.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
+              {boardNotes.map(note => (
+                <div key={note.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', padding: '14px 18px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                    <div style={{ width: '14px', height: '14px', borderRadius: '4px', background: note.color, flexShrink: 0 }} />
+                    <span style={{ color: '#fff', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{note.text}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem', flexShrink: 0 }}>{new Date(note.created_at).toLocaleString()}</span>
+                  </div>
+                  <button
+                    onClick={() => deleteNote(note.id)}
+                    style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: '10px', padding: '8px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}
+                    title="Delete note"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
