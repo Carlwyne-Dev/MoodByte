@@ -563,7 +563,7 @@ export default function Player({ isMobile = false }) {
 
       {/* Spotify import input */}
       {showSpotify && !spotifyEmbed && (
-        <div className="spotify-import-view">
+        <div className={`spotify-import-view ${closingSpotify ? 'closing' : ''}`}>
           <div className="spotify-input-wrap">
             <input
               type="text" placeholder="Paste Spotify link..."
@@ -913,6 +913,11 @@ export default function Player({ isMobile = false }) {
           display: flex;
           flex-direction: column;
           gap: 12px;
+          opacity: 1;
+          transition: opacity 0.18s ease;
+        }
+        .spotify-import-view.closing {
+          opacity: 0;
         }
         .spotify-input-wrap {
           display: flex;

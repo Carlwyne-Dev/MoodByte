@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { MOODS } from '../../utils/moodConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useTheme } from '../../context/ThemeContext';
-import { Palette, ArrowRight, History, X, Upload } from 'lucide-react';
+import { Palette, ArrowRight, History, X } from 'lucide-react';
 import MoodHistory from './MoodHistory';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
@@ -18,7 +18,7 @@ export default function MoodSelector() {
   const [popupPos, setPopupPos] = useState({ top: 0, left: 0 });
   const [pendingTheme, setPendingTheme] = useState(null);
   const [logged, setLogged] = useState(false);
-  const { theme, changeTheme, uploadCustomBg } = useTheme();
+  const { theme, changeTheme } = useTheme();
   
   const containerRef = useRef(null);
   const popupRef = useRef(null);
@@ -113,14 +113,6 @@ export default function MoodSelector() {
       setReflection('');
       setLogged(false);
     }, 2000);
-  };
-
-  const handleUploadBg = async (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      await uploadCustomBg(file);
-      e.target.value = null; // reset input
-    }
   };
 
   const selectedConfig = MOODS.find(m => m.id === selectedMood);
