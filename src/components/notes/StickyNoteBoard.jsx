@@ -21,7 +21,7 @@ const SyncModal = lazy(() => import('../settings/SyncModal'));
 const StudyDesk = lazy(() => import('../study/StudyDesk'));
 const CalendarWidget = lazy(() => import('../study/CalendarWidget'));
 
-const COLORS = [
+export const COLORS = [
   { name: 'Lemon',      value: '#fef08a' },
   { name: 'Honey',      value: '#fde68a' },
   { name: 'Peach',      value: '#fed7aa' },
