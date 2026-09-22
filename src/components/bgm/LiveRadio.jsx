@@ -39,7 +39,7 @@ export default function LiveRadio() {
       div.id = pId;
       containerRef.current.appendChild(div);
 
-      const newPlayer = new window.YT.Player(pId, {
+      new window.YT.Player(pId, {
         height: '1',
         width: '1',
         videoId: RADIO_CHANNELS[0].videoId,
@@ -155,16 +155,6 @@ export default function LiveRadio() {
         player.playVideo();
       }
       window.dispatchEvent(new Event('radio-play'));
-    }
-  };
-
-  const switchChannel = (e, id) => {
-    e.stopPropagation();
-    const channel = RADIO_CHANNELS.find(c => c.id === id);
-    if (channel && player && isReady) {
-      setCurrentChannelId(id);
-      setStreamBroken(false); // reset on channel switch
-      player.loadVideoById(channel.videoId);
     }
   };
 

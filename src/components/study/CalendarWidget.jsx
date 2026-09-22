@@ -157,7 +157,6 @@ export default function CalendarWidget({ onClose, inlineMode = false }) {
     setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
   };
 
-  const selectedNotes = selectedDay ? (dayNotes[selectedDay.key] || []) : [];
   const selectedTasks = selectedDay
     ? tasks.filter(t => t.calendarDate === selectedDay.key)
     : [];
