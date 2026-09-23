@@ -117,12 +117,16 @@ export default function CommunityWallModal({ onClose }) {
         </button>
         {formError && <p className="wall-form-error">{formError}</p>}
       </div>
-      <p className="wall-hint">Click "Pin it", then click anywhere on the board to place your note.</p>
+      <p className="wall-hint">
+        {armedNote
+          ? 'Now tap anywhere on the board to place your note.'
+          : 'Click "Pin it", then click anywhere on the board to place your note.'}
+      </p>
 
       {armedNote && (
         <div
-          className="wall-armed-note"
-          style={{ left: cursorPos.x, top: cursorPos.y, background: armedNote.color }}
+          className={`wall-armed-note ${cursorPos ? '' : 'wall-armed-note-fixed'}`}
+          style={cursorPos ? { left: cursorPos.x, top: cursorPos.y, background: armedNote.color } : { background: armedNote.color }}
         >
           {armedNote.text}
         </div>
@@ -326,6 +330,22 @@ export default function CommunityWallModal({ onClose }) {
           z-index: 10001;
         }
 
+        /* Before any real pointer/touch movement is seen (e.g. right after
+           tapping "Pin it" on a touchscreen, where there's no hover), show
+           the armed note in an obvious fixed spot instead of at a stale or
+           zeroed position. */
+        .wall-armed-note-fixed {
+          left: 50% !important;
+          top: auto !important;
+          bottom: 150px;
+          transform: translateX(-50%) rotate(-2deg);
+          animation: armedNoteBounce 1s ease-in-out infinite;
+        }
+        @keyframes armedNoteBounce {
+          0%, 100% { transform: translateX(-50%) translateY(0) rotate(-2deg); }
+          50% { transform: translateX(-50%) translateY(-8px) rotate(-2deg); }
+        }
+
         @media (max-width: 768px) {
           .wall-exit-text { display: none; }
           .wall-header-spacer { width: 40px; }
@@ -335,6 +355,7 @@ export default function CommunityWallModal({ onClose }) {
           }
           .wall-compose-input { width: 100%; }
           .wall-hint { bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+          .wall-armed-note-fixed { bottom: calc(200px + env(safe-area-inset-bottom, 0px)); }
         }
       `}</style>
     </div>,
